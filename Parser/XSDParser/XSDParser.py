@@ -26,6 +26,8 @@ def removeSchemaInformation(string):
     # Return the base string.
     return string
 
+
+
 """
 Class representing a parsed XSD.
 """
@@ -68,7 +70,7 @@ class XSD:
     """
     def addElement(self,xsdElement):
         # Throw an exception if the type exists.
-        if self.getType(xsdElement.name):
+        if self.getElement(xsdElement.name):
             raise IndexError("Type already processed with name: " + xsdElement.name)
 
         # Add the type.
@@ -204,11 +206,11 @@ class XSD:
             # Create and add the element.
             element = XSDData.XSDChildElement(name,type,default,minOccurrences,maxOccurrences)
             elements.append(element)
-        elif tagName == "complexContent":
+        elif tagName == "complexContent" or tagName == "extension" or tagName == "restriction":
             for child in element:
                 for subChild in self.processComplexElementChild(child):
                     elements.append(subChild)
-        elif tagName != "extension" and tagName != "restriction":
+        else:
             print("Unable to process \"" + str(tagName) + "\": " + ElementTree.tostring(element,encoding="utf8",method="xml").decode("utf8"))
 
         # Return the elements.
@@ -242,14 +244,13 @@ class XSD:
     """
     def processComplexType(self,element,name,type=None):
         # Override the base type.
-        if type is None:
-            extensionElement = self.getChildElementOfName(element,"extension")
+        extensionElement = self.getChildElementOfName(element,"extension")
+        if extensionElement is not None:
+            type = removeSchemaInformation(extensionElement.attrib["base"])
+        else:
+            extensionElement = self.getChildElementOfName(element,"restriction")
             if extensionElement is not None:
                 type = removeSchemaInformation(extensionElement.attrib["base"])
-            else:
-                extensionElement = self.getChildElementOfName(element,"restriction")
-                if extensionElement is not None:
-                    type = removeSchemaInformation(extensionElement.attrib["base"])
 
         # Create the complex type.
         schemaObject = XSDData.XSDComplexType(name,type)
@@ -306,6 +307,8 @@ class XSD:
             else:
                 print("Unsupported tag of " + str(tagName))
 
+
+
 """
 Processes an XSD file to a set of schema objects.
 """
@@ -317,7 +320,30 @@ def processXSD(xsdContents):
     # Return the XSD.
     return xsd
 
+"""
+"Flattens" an XSD object (removes all groups).
+"""
+def flattenXSD(existingXSD):
+    # Create a new XSD.
+    newXSD = XSD()
+    newXSD.namespace = existingXSD.namespace
 
+    # Flatten the types.
+    for type in existingXSD.types:
+        if isinstance(type,XSDData.XSDSimpleType):
+            newXSD.addType(type)
+        else:
+            newXSD.addType(type.flatten())
+
+    # Add the elements.
+    for element in existingXSD.elements:
+        newXSD.addElement(element)
+
+    # Return the new XSD.
+    return newXSD
+
+
+"""
 if __name__ == '__main__':
 
     with open("../../xsd/SchemaCombined_v12.10.xsd") as file:
@@ -325,3 +351,4 @@ if __name__ == '__main__':
 
     for type in processXSD(contents).types:
         print(type.name)
+"""

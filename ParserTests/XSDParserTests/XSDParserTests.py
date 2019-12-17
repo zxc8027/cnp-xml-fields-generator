@@ -11,6 +11,30 @@ from Parser.XSDParser import XSDParser, XSDData
 
 class XSDParserTests(unittest.TestCase):
     """
+    Tests checking if types are valid for error checking.
+    """
+    def testIsTypeValid(self):
+        # Create an XSD.
+        xsd = XSDParser.XSD()
+        xsd.addType(XSDData.XSDSimpleType("test1","string"))
+        xsd.addType(XSDData.XSDSimpleType("test2","boolean"))
+        xsd.addType(XSDData.XSDSimpleType("test3","int"))
+        xsd.addType(XSDData.XSDComplexType("test4","string"))
+        xsd.addType(XSDData.XSDComplexType("test5","test2"))
+        xsd.addType(XSDData.XSDComplexType("test6","test4"))
+        xsd.addType(XSDData.XSDComplexType("test7","test8"))
+
+        # Assert the types are valid.
+        self.assertTrue(xsd.isTypeValid("test1"))
+        self.assertTrue(xsd.isTypeValid("test2"))
+        self.assertTrue(xsd.isTypeValid("test3"))
+        self.assertTrue(xsd.isTypeValid("test4"))
+        self.assertTrue(xsd.isTypeValid("test5"))
+        self.assertTrue(xsd.isTypeValid("test6"))
+        self.assertFalse(xsd.isTypeValid("test7"))
+        self.assertFalse(xsd.isTypeValid("test8"))
+
+    """
     Tests parsing a simpleType without enumeration.
     """
     def testSimpleTypeWithoutEnumeration(self):
@@ -400,25 +424,62 @@ class XSDParserTests(unittest.TestCase):
         self.assertEqual(element.childItems[0].childItems[0].maxOccurrences,1)
 
     """
-    Tests checking if types are valid for error checking.
+    Tests the flattenXSD method.
     """
-    def testIsTypeValid(self):
-        # Create an XSD.
-        xsd = XSDParser.XSD()
-        xsd.addType(XSDData.XSDSimpleType("test1","string"))
-        xsd.addType(XSDData.XSDSimpleType("test2","boolean"))
-        xsd.addType(XSDData.XSDSimpleType("test3","int"))
-        xsd.addType(XSDData.XSDComplexType("test4","string"))
-        xsd.addType(XSDData.XSDComplexType("test5","test2"))
-        xsd.addType(XSDData.XSDComplexType("test6","test4"))
-        xsd.addType(XSDData.XSDComplexType("test7","test8"))
+    def testFlattenXSD(self):
+        xsdText = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" \
+                  "<xs:schema targetNamespace=\"http://www.vantivcnp.com/schema\" xmlns:xp=\"http://www.vantivcnp.com/schema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\">" \
+                  "    <xs:simpleType name=\"stringMin1Max36CollapseWhiteSpaceType\">" \
+                  "        <xs:restriction base=\"xs:string\">" \
+                  "            <xs:minLength value=\"1\" />" \
+                  "            <xs:maxLength value=\"36\" />" \
+                  "            <xs:whiteSpace value=\"collapse\"/>" \
+                  "        </xs:restriction>" \
+                  "    </xs:simpleType>" \
+                  "    " \
+                  "    <xs:element name=\"createPlan\" substitutionGroup=\"xp:recurringTransaction\" >" \
+                  "        <xs:complexType>" \
+                  "            <xs:complexContent>" \
+                  "                <xs:extension base=\"xp:recurringTransactionType\">" \
+                  "                    <xs:sequence>" \
+                  "                        <xs:attribute name=\"attribute\" type=\"string\"/>" \
+                  "                        <xs:element name=\"element1\" type=\"string\"/>" \
+                  "                        <xs:all>" \
+                  "                            <xs:element name=\"element2\" type=\"string\"/>" \
+                  "                            <xs:sequence>" \
+                  "                                <xs:element name=\"element3\" type=\"string\"/>" \
+                  "                            </xs:sequence>" \
+                  "                        </xs:all>" \
+                  "                    </xs:sequence>" \
+                  "                </xs:extension>" \
+                  "            </xs:complexContent>" \
+                  "        </xs:complexType>" \
+                  "    </xs:element>" \
+                  "</xs:schema>"
 
-        # Assert the types are valid.
-        self.assertTrue(xsd.isTypeValid("test1"))
-        self.assertTrue(xsd.isTypeValid("test2"))
-        self.assertTrue(xsd.isTypeValid("test3"))
-        self.assertTrue(xsd.isTypeValid("test4"))
-        self.assertTrue(xsd.isTypeValid("test5"))
-        self.assertTrue(xsd.isTypeValid("test6"))
-        self.assertFalse(xsd.isTypeValid("test7"))
-        self.assertFalse(xsd.isTypeValid("test8"))
+
+        # Parse the XSD text and assert it was parsed correctly.
+        xsd = XSDParser.processXSD(xsdText)
+        xsd = XSDParser.flattenXSD(xsd)
+        self.assertEqual(xsd.namespace,"http://www.vantivcnp.com/schema")
+        simpleType = xsd.getType("stringMin1Max36CollapseWhiteSpaceType")
+        self.assertEqual(simpleType.name,"stringMin1Max36CollapseWhiteSpaceType")
+        self.assertEqual(simpleType.base,"string")
+        self.assertEqual(simpleType.isEnum(),False)
+        self.assertEqual(simpleType.restrictions,{"minLength": "1", "maxLength": "36", "whiteSpace": "collapse"})
+        self.assertEqual(simpleType.enums,[])
+        element = xsd.getElement("createPlan")
+        self.assertEqual(element.name,"createPlan")
+        self.assertEqual(element.base,"recurringTransaction")
+        complexType = xsd.getType("createPlan")
+        self.assertEqual(complexType.name,"createPlan")
+        self.assertEqual(complexType.base,"recurringTransactionType")
+        self.assertEqual(len(complexType.childItems),4)
+        self.assertEqual(complexType.childItems[0].name,"attribute")
+        self.assertEqual(complexType.childItems[0].type,"string")
+        self.assertEqual(complexType.childItems[1].name,"element1")
+        self.assertEqual(complexType.childItems[1].type,"string")
+        self.assertEqual(complexType.childItems[2].name,"element2")
+        self.assertEqual(complexType.childItems[2].type,"string")
+        self.assertEqual(complexType.childItems[3].name,"element3")
+        self.assertEqual(complexType.childItems[3].type,"string")

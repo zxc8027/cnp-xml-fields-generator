@@ -51,7 +51,31 @@ class XSDComplexType:
     Adds a child item.
     """
     def addItem(self,item):
+        # Return if the item already exists.
+        for type in self.childItems:
+            if (isinstance(type,XSDAttribute) or isinstance(type,XSDChildElement)) and (isinstance(item,XSDAttribute) or isinstance(item,XSDChildElement)) and type.name == item.name:
+                return
+
+        # Add the item.
         self.childItems.append(item)
+
+    """
+    "Flattens" the complex type.
+    """
+    def flatten(self):
+        # Create a new complex type.
+        newComplexType = XSDComplexType(self.name,self.base)
+
+        # Add the child items.
+        for type in self.childItems:
+            if isinstance(type,XSDGroup):
+                for subType in type.getAllChildren():
+                    newComplexType.addItem(subType)
+            else:
+                newComplexType.addItem(type)
+
+        # Return the new complex type.
+        return newComplexType
 
 """
 Class representing a child element.
@@ -96,3 +120,21 @@ class XSDGroup:
     """
     def addItem(self,item):
         self.childItems.append(item)
+
+    """
+    Returns all the child attributes and elements.
+    """
+    def getAllChildren(self):
+        # Create a list.
+        children = []
+
+        # Add the child items.
+        for type in self.childItems:
+            if isinstance(type, XSDGroup):
+                for subType in type.getAllChildren():
+                    children.append(subType)
+            else:
+                children.append(type)
+
+        # Return the list.
+        return children
