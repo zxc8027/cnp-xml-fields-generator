@@ -368,7 +368,7 @@ class XSDParserTests(unittest.TestCase):
                   "                <xs:element name=\"customType\">" \
                   "                    <xs:complexType>" \
                   "                        <xs:choice>" \
-                  "                            <xs:totalDigits value=\"4\"/>" \
+                  "                            <xs:element name=\"customElement\" type=\"xs:string\"/>" \
                   "                        </xs:choice>" \
                   "                    </xs:complexType>" \
                   "                </xs:element>" \
