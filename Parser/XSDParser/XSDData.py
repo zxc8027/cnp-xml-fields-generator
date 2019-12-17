@@ -42,7 +42,7 @@ class XSDComplexType:
     """
     Creates and complex XSD type.
     """
-    def __init__(self, name, base):
+    def __init__(self,name,base):
         self.name = name
         self.base = base
         self.childItems = []
@@ -56,19 +56,43 @@ class XSDComplexType:
 """
 Class representing a child element.
 """
+class XSDChildElement:
+    """
+    Creates and complex XSD child element.
+    """
+    def __init__(self,name,type,default=None,minOccurrences=0,maxOccurrences=1):
+        self.name = name
+        self.type = type
+        self.default = default
+        self.minOccurrences = minOccurrences
+        self.maxOccurrences = maxOccurrences
 
 """
-Class representing a attribute.
+Class representing an attribute.
 """
+class XSDAttribute:
+    """
+    Creates and complex XSD attribute.
+    """
+    def __init__(self,name,type,required=False,default=None):
+        self.name = name
+        self.type = type
+        self.required = required
+        self.default = default
 
 """
-Class representing an all group (all of the options).
+Class representing a group.
 """
+class XSDGroup:
+    """
+    Creates and complex XSD group.
+    """
+    def __init__(self,type):
+        self.type = type
+        self.childItems = []
 
-"""
-Class representing a sequence group (any of the options).
-"""
-
-"""
-Class representing a choice group (limited amount of options).
-"""
+    """
+    Adds a child item.
+    """
+    def addItem(self,item):
+        self.childItems.append(item)
