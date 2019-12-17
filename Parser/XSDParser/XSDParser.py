@@ -75,6 +75,23 @@ class XSD:
         self.elements.append(xsdElement)
 
     """
+    Returns if a type is valid (is a base or links to another).
+    Does not check for cyclic classes.
+    """
+    def isTypeValid(self,typeName):
+        # Return true if it is a base type.
+        if typeName == "int" or typeName == "string" or typeName == "boolean":
+            return True
+
+        # Get the next type name and return false if it doesn't exists.
+        nextType = self.getType(typeName)
+        if nextType is None or nextType.base is None:
+            return False
+
+        # Return the next type.
+        return self.isTypeValid(nextType.base)
+
+    """
     Returns an XSD type for the given name.
     """
     def getType(self,typeName):
@@ -307,5 +324,4 @@ if __name__ == '__main__':
         contents = file.read()
 
     for type in processXSD(contents).types:
-        # print(type.name)
-        pass
+        print(type.name)

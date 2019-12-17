@@ -398,3 +398,27 @@ class XSDParserTests(unittest.TestCase):
         self.assertEqual(element.childItems[0].childItems[0].default,None)
         self.assertEqual(element.childItems[0].childItems[0].minOccurrences,0)
         self.assertEqual(element.childItems[0].childItems[0].maxOccurrences,1)
+
+    """
+    Tests checking if types are valid for error checking.
+    """
+    def testIsTypeValid(self):
+        # Create an XSD.
+        xsd = XSDParser.XSD()
+        xsd.addType(XSDData.XSDSimpleType("test1","string"))
+        xsd.addType(XSDData.XSDSimpleType("test2","boolean"))
+        xsd.addType(XSDData.XSDSimpleType("test3","int"))
+        xsd.addType(XSDData.XSDComplexType("test4","string"))
+        xsd.addType(XSDData.XSDComplexType("test5","test2"))
+        xsd.addType(XSDData.XSDComplexType("test6","test4"))
+        xsd.addType(XSDData.XSDComplexType("test7","test8"))
+
+        # Assert the types are valid.
+        self.assertTrue(xsd.isTypeValid("test1"))
+        self.assertTrue(xsd.isTypeValid("test2"))
+        self.assertTrue(xsd.isTypeValid("test3"))
+        self.assertTrue(xsd.isTypeValid("test4"))
+        self.assertTrue(xsd.isTypeValid("test5"))
+        self.assertTrue(xsd.isTypeValid("test6"))
+        self.assertFalse(xsd.isTypeValid("test7"))
+        self.assertFalse(xsd.isTypeValid("test8"))
