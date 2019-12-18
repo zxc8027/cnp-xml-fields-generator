@@ -9,6 +9,15 @@ from Parser.XSDParser import XSDData
 
 
 
+XSD_PRIMITIVE_TYPES = [
+    "int","integer","long","decimal",
+    "string","base64Binary",
+    "boolean",
+    "dateTime","date",
+]
+
+
+
 """
 Removes the schema information from a string.
 """
@@ -82,16 +91,20 @@ class XSD:
     """
     def isTypeValid(self,typeName):
         # Return true if it is a base type.
-        if typeName == "int" or typeName == "string" or typeName == "boolean":
+        if typeName is None or typeName in XSD_PRIMITIVE_TYPES:
             return True
 
         # Get the next type name and return false if it doesn't exists.
         nextType = self.getType(typeName)
-        if nextType is None or nextType.base is None:
+        nextElement = self.getElement(typeName)
+        if nextType is None and nextElement is None:
             return False
 
         # Return the next type.
-        return self.isTypeValid(nextType.base)
+        if nextType is not None:
+            return self.isTypeValid(nextType.base)
+        else:
+            return self.isTypeValid(nextElement.base)
 
     """
     Returns an XSD type for the given name.
@@ -173,7 +186,7 @@ class XSD:
             maxOccurrences = 1
             default = None
             if "ref" in element.attrib:
-                name = element.attrib["ref"]
+                name = removeSchemaInformation(element.attrib["ref"])
                 type = name
             else:
                 name = element.attrib["name"]
@@ -193,7 +206,7 @@ class XSD:
             elif len(element) == 1:
                 typeElement = element[0]
                 typeTagName = removeSchemaInformation(typeElement.tag)
-                type = name
+                type = removeSchemaInformation(name)
                 if typeTagName == "simpleType":
                     self.processSimpleType(typeElement,name)
                 elif typeTagName == "complexType":
@@ -342,13 +355,37 @@ def flattenXSD(existingXSD):
     # Return the new XSD.
     return newXSD
 
-
 """
+Validates that the types of a flatten XSD are valid.
+"""
+def validateXSDTypes(xsd):
+    invalidXSDs = ""
+
+    # Iterate through the types.
+    for type in xsd.types:
+        if not xsd.isTypeValid(type.base):
+            invalidXSDs += "(Type) " + str(type.name) + " (Base is invalid)\n"
+
+        if isinstance(type,XSDData.XSDComplexType):
+            for item in type.childItems:
+                if not xsd.isTypeValid(item.type):
+                    invalidXSDs += "(Type) " + str(type.name) + "." + item.type + "\n"
+
+    # Iterate through the elements.
+    for element in xsd.elements:
+        if not xsd.isTypeValid(element.base):
+            invalidXSDs += "(Element) " + str(element.name) + "\n"
+
+    # Raise an error if validation failed.
+    if invalidXSDs != "":
+        raise AttributeError("Missing inheritance references are detected in the following:\n\n" + invalidXSDs + "\nThis may be due to an incomplete list of primitives in the script, or incorrect inheritance references.")
+
+
+
 if __name__ == '__main__':
 
     with open("../../xsd/SchemaCombined_v12.10.xsd") as file:
         contents = file.read()
 
-    for type in processXSD(contents).types:
-        print(type.name)
-"""
+    xsd = flattenXSD(processXSD(contents))
+    validateXSDTypes(xsd)
