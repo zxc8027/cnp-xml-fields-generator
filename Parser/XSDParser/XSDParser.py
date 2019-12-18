@@ -58,7 +58,7 @@ class XSD:
 
         if existingType is not None:
             if isinstance(existingType,XSDData.XSDSimpleType) and isinstance(xsdType,XSDData.XSDSimpleType):
-                print("Type already exists; merging " + xsdType.name)
+                print("Basic type already exists; merging " + xsdType.name)
 
                 # Merge the restrictions.
                 for restrictionName in xsdType.restrictions.keys():
@@ -68,6 +68,12 @@ class XSD:
                 for enum in xsdType.enums:
                     if enum not in existingType.enums:
                         existingType.addEnumeration(enum)
+            elif isinstance(existingType,XSDData.XSDComplexType) and isinstance(xsdType,XSDData.XSDComplexType):
+                print("Basic type already exists; merging " + xsdType.name)
+
+                # Add the children.
+                for childItem in xsdType.childItems:
+                    existingType.addItem(childItem)
             else:
                 raise IndexError("Type already processed with name and can't be merged: " + xsdType.name)
         else:

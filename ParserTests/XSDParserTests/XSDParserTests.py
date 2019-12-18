@@ -212,6 +212,32 @@ class XSDParserTests(unittest.TestCase):
         self.assertEqual(simpleType.enums,["OneTime","FirstRecurring","SubsequentRecurring","FinalRecurring"])
 
     """
+    Tests merging 2 complex types.
+    """
+    def testMergeComplexType(self):
+        xsdText = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" \
+                  "<xs:schema targetNamespace=\"http://www.vantivcnp.com/schema\" xmlns:xp=\"http://www.vantivcnp.com/schema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\">" \
+                  "    <xs:complexType name=\"authentication\">" \
+                  "        <xs:sequence>" \
+                  "            <xs:element name=\"user\" type=\"xp:string20Type\" />" \
+                  "        </xs:sequence>" \
+                  "    </xs:complexType>" \
+                  "    <xs:complexType name=\"authentication\">" \
+                  "        <xs:sequence>" \
+                  "            <xs:element name=\"password\" type=\"xp:string20Type\" />" \
+                  "        </xs:sequence>" \
+                  "    </xs:complexType>" \
+                  "</xs:schema>"
+
+        # Parse the XSD text and assert it was parsed correctly.
+        xsd = XSDParser.processXSD(xsdText)
+        self.assertEqual(xsd.namespace,"http://www.vantivcnp.com/schema")
+        complexType = xsd.getType("authentication")
+        self.assertEqual(complexType.name,"authentication")
+        self.assertEqual(complexType.base,None)
+        self.assertEqual(len(complexType.childItems),2)
+
+    """
     Tests attributes being required and optional.
     """
     def testUseInAttributes(self):
