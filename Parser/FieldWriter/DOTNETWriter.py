@@ -27,6 +27,8 @@ OBJECT_TRANSLATIONS = {
     "decimal": "string",
     "base64Binary": "string",
     "boolean": "bool",
+    "void": "voidTxn", # Special case: void in C# is a keyword
+    "deliveryType": "enhancedDataDeliveryType", # Special case: property deliveryType exists and conflicts with the enum
 }
 
 PRIMITIVE_TYPES = [
@@ -86,6 +88,15 @@ class DOTNETWriter(FieldWriter.FieldWriter):
         return attribute + ")]"
 
     """
+    Transforms a class name. Mainly for special cases.
+    """
+    def transformClassName(self,className):
+        if className in OBJECT_TRANSLATIONS.keys():
+            return OBJECT_TRANSLATIONS[className]
+
+        return className
+
+    """
     Makes a string usable as an enum.
     """
     def convertToEnum(self,enumValue):
@@ -100,8 +111,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
     """
     def getClassString(self,name):
         # Change the name if it isn't valid for C#.
-        if name in OBJECT_TRANSLATIONS.keys():
-            name = OBJECT_TRANSLATIONS[name]
+        name = self.transformClassName(name)
 
         # Add a question mark (nullable) if it is an enum or primitive type.
         if name in self.xsd.enums.keys() or name in PRIMITIVE_TYPES:
@@ -125,12 +135,9 @@ class DOTNETWriter(FieldWriter.FieldWriter):
     Returns the representation of an object.
     """
     def getObjectString(self,childType,value):
-        # Remove the "?" from the end.
-        childType = childType.replace("?","")
-
         # Return an enum if it is an enum.
         if childType in self.xsd.enums.keys():
-            return childType + "." + self.convertToEnum(value)
+            return self.transformClassName(childType) + "." + self.convertToEnum(value)
 
         # Return a string.
         if childType == "string":
@@ -149,7 +156,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
         generatedFile += createDeclarationHeader("Enum declarations.")
         for enumName in self.xsd.enums.keys():
             enum = self.xsd.enums[enumName]
-            generatedFile += "\tpublic enum " + enumName + "\n\t{\n"
+            generatedFile += "\tpublic enum " + self.transformClassName(enumName) + "\n\t{\n"
 
             # Add the enum items.
             for enumItemName in enum.childItems.keys():
@@ -177,7 +184,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             base = type.type
             if base is None:
                 base = "VersionedXMLElement"
-            generatedFile += "\tpublic class " + className + " : " + base + "\n\t{\n"
+            generatedFile += "\tpublic class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
 
             generatedFile += "\t}\n\n"
 
@@ -192,7 +199,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             base = type.type
             if base is None:
                 base = "VersionedXMLElement"
-            generatedFile += "\tpublic class " + className + " : " + base + "\n\t{\n"
+            generatedFile += "\tpublic class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
 
             # Write the properties.
             for childName in type.childItems.keys():
@@ -206,7 +213,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
                 # Write the property.
                 generatedFile += "\t\tpublic " + childType + " " + childName + " { get; set; }"
                 if child.default is not None:
-                    generatedFile += " = " + self.getObjectString(childType,child.default) + ";"
+                    generatedFile += " = " + self.getObjectString(child.type,child.default) + ";"
                 generatedFile += "\n\n"
 
             generatedFile += "\t}\n\n"
@@ -219,13 +226,13 @@ class DOTNETWriter(FieldWriter.FieldWriter):
 
                 # Write the attributes.
                 for name in type.names:
-                    generatedFile += "\t" + self.createAttribute("XMLElement", name) + "\n"
+                    generatedFile += "\t" + self.createAttribute("XMLElement",name) + "\n"
 
                 # Write the class name.
                 base = type.type
                 if base is None:
                     base = "VersionedXMLElement"
-                generatedFile += "\tpublic class " + className + " : " + base + "\n\t{\n"
+                generatedFile += "\tpublic class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
 
                 generatedFile += "\t}\n\n"
 
