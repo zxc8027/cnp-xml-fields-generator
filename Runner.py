@@ -31,9 +31,9 @@ def compareSchemaNames(name1,name2):
 
     # Compare the versions.
     if majorVersion1 == majorVersion2:
-        return minorVersion1 - minorVersion2
+        return minorVersion2 - minorVersion1
     else:
-        return majorVersion1 - majorVersion2
+        return majorVersion2 - majorVersion1
 
 
 
