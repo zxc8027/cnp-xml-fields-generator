@@ -107,6 +107,17 @@ class DOTNETWriter(FieldWriter.FieldWriter):
         if name in self.xsd.enums.keys() or name in PRIMITIVE_TYPES:
             name += "?"
 
+        # Iterate through the types and elements and return if the lowercase versions match.
+        for typeName in self.xsd.simpleTypes.keys():
+            if typeName.lower() == name.lower():
+                return typeName
+        for typeName in self.xsd.complexTypes.keys():
+            if typeName.lower() == name.lower():
+                return typeName
+        for typeName in self.xsd.elements.keys():
+            if typeName.lower() == name.lower():
+                return typeName
+
         # Return the name.
         return name
 
