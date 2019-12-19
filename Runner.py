@@ -4,7 +4,7 @@ Zachary Cook
 Runs the program and creates the program XML fields.
 """
 
-from Parser.XSDParser import XSDParser
+from Parser.XSDParser import XSDParser, XSDVersionDiffer
 from functools import cmp_to_key
 import os
 import re
@@ -39,11 +39,23 @@ if __name__ == '__main__':
     filesToRead = os.listdir(XSD_DIRECTORY)
     filesToRead = sorted(filesToRead,key=cmp_to_key(compareSchemaNames))
 
-    # Parse the XSD objects.
-    baseXSDs = []
+    # Get the list of versions
     versions = []
     for fileName in filesToRead:
-        print("Reading " + XSD_DIRECTORY + fileName)
         majorVersion,minorVersion = getVersionFromName(fileName)
         versions.append(str(majorVersion) + "." + str(minorVersion))
+
+    # Parse the XSD objects.
+    baseXSDs = []
+    for fileName in filesToRead:
+        print("Reading " + XSD_DIRECTORY + fileName)
         baseXSDs.append(XSDParser.createFromFile(XSD_DIRECTORY + fileName))
+
+    # Merge the XSDs together.
+    versionedXSD = XSDVersionDiffer.VersionedXSD()
+    for i in range(0,len(versions)):
+        version = versions[i]
+        xsd = baseXSDs[i]
+
+        print("Merging version " + version)
+        versionedXSD.populateFromXSD(xsd,version)
