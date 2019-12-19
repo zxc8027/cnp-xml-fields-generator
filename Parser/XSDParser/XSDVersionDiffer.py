@@ -25,10 +25,11 @@ class NameVersion:
     """
     Creates a name version object.
     """
-    def __init__(self,name,start,end):
+    def __init__(self,name,start,end,type=None):
         self.name = name
         self.start = start
         self.end = end
+        self.type = type
 
 """
 Class repenting a versioned item.
@@ -45,8 +46,8 @@ class VersionedItem:
     """
     Adds a name for a version.
     """
-    def addNameForVersion(self,name,version):
-        versionTag = NameVersion(name,version,version)
+    def addNameForVersion(self,name,version,type=None):
+        versionTag = NameVersion(name,version,version,type)
         self.names.append(versionTag)
         self.nameRefs[version] = versionTag
 
@@ -70,7 +71,7 @@ class VersionedItem:
 
             if currentVersion in self.nameRefs.keys():
                 versionToMerge = self.names[currentVersionTag + 1]
-                if currentNameVersion.end == versions[i - 1] and currentNameVersion.name == versionToMerge.name:
+                if currentNameVersion.end == versions[i - 1] and currentNameVersion.name == versionToMerge.name and currentNameVersion.type == versionToMerge.type:
                     currentNameVersion.end = versionToMerge.end
                     self.names.pop(currentVersionTag + 1)
                     self.nameRefs.pop(currentVersion)
@@ -91,13 +92,13 @@ class VersionedComposite(VersionedItem):
     """
     Adds a name for a child item.
     """
-    def addChildNameForVersion(self,commonName,encodeName,type,version):
+    def addChildNameForVersion(self,commonName,encodeName,base,version,type=None):
         # Create the child element if it doesn't exist.
         if commonName not in self.childItems.keys():
-            self.childItems[commonName] = VersionedItem(type)
+            self.childItems[commonName] = VersionedItem(base)
 
         # Add the version.
-        self.childItems[commonName].addNameForVersion(encodeName,version)
+        self.childItems[commonName].addNameForVersion(encodeName,version,type)
 
     """
     Merges the names together.
@@ -151,7 +152,25 @@ class VersionedXSD:
     Adds a complex type.
     """
     def addComplexType(self,complexType,version):
-        pass
+        # Get the name to store.
+        storeName = complexType.name
+        if storeName in NAMES_TO_MERGE.keys():
+            storeName = NAMES_TO_MERGE[storeName]
+
+        # Add the item if it doesn't exist.
+        if storeName not in self.complexTypes.keys():
+            self.complexTypes[storeName] = VersionedComposite(complexType.base)
+
+        # Add the name.
+        item = self.complexTypes[storeName]
+        item.addNameForVersion(complexType.name,version)
+
+        # Add the enums.
+        for child in complexType.childItems:
+            if isinstance(child,XSDData.XSDChildElement):
+                item.addChildNameForVersion(child.name,child.name,child.type,version,"Element")
+            else:
+                item.addChildNameForVersion(child.name,child.name,child.type,version,"Attribute")
 
     """
     Adds an element.
