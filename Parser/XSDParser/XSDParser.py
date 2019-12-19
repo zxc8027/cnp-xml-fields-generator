@@ -342,6 +342,8 @@ class XSD:
                     firstChildTag = removeSchemaInformation(firstChild.tag)
                     if firstChildTag == "complexType":
                         self.processComplexType(firstChild,name,baseType)
+                    elif firstChildTag == "simpleType":
+                        self.processSimpleType(firstChild,name)
                     else:
                         print("Unsupported child tag of " + str(name) + ": " + str(firstChildTag))
             elif tagName == "complexType":

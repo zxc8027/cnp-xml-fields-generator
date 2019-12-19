@@ -352,35 +352,24 @@ class XSDParserTests(unittest.TestCase):
         xsdText = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" \
                   "<xs:schema targetNamespace=\"http://www.vantivcnp.com/schema\" xmlns:xp=\"http://www.vantivcnp.com/schema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\">" \
                   "    <xs:element name=\"customElement\">" \
-                  "        <xs:complexType>" \
-                  "            <xs:all>" \
-                  "                <xs:element name=\"customType\">" \
-                  "                    <xs:simpleType>" \
-                  "                        <xs:restriction base=\"xs:int\">" \
-                  "                            <xs:totalDigits value=\"4\"/>" \
-                  "                        </xs:restriction>" \
-                  "                    </xs:simpleType>" \
-                  "                </xs:element>" \
-                  "            </xs:all>" \
-                  "        </xs:complexType>" \
+                  "        <xs:simpleType>" \
+                  "            <xs:restriction base=\"xs:string\">" \
+                  "                <xs:minLength value=\"1\" />" \
+                  "            </xs:restriction>" \
+                  "        </xs:simpleType>" \
                   "    </xs:element>" \
                   "</xs:schema>"
 
         # Parse the XSD text and assert it was parsed correctly.
         xsd = XSDParser.processXSD(xsdText)
-        self.assertEqual(len(xsd.types),2)
+        self.assertEqual(len(xsd.types),1)
         self.assertEqual(xsd.namespace,"http://www.vantivcnp.com/schema")
         element = xsd.getType("customElement")
-        self.assertEqual(len(element.childItems),1)
-        self.assertIsInstance(element.childItems[0], XSDData.XSDGroup)
-        self.assertEqual(element.childItems[0].type,"all")
-        self.assertEqual(len(element.childItems[0].childItems),1)
-        self.assertIsInstance(element.childItems[0].childItems[0],XSDData.XSDChildElement)
-        self.assertEqual(element.childItems[0].childItems[0].name,"customType")
-        self.assertEqual(element.childItems[0].childItems[0].type,"customType")
-        self.assertEqual(element.childItems[0].childItems[0].default,None)
-        self.assertEqual(element.childItems[0].childItems[0].minOccurrences,0)
-        self.assertEqual(element.childItems[0].childItems[0].maxOccurrences,1)
+        self.assertEqual(element.name,"customElement")
+        self.assertEqual(element.base,"string")
+        self.assertEqual(element.isEnum(),False)
+        self.assertEqual(element.restrictions,{"minLength": "1"})
+        self.assertEqual(element.enums,[])
 
     """
     Tests an element having an embedded complex type.
