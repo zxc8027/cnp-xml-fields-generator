@@ -113,6 +113,30 @@ class XSD:
             return self.isTypeValid(nextElement.base)
 
     """
+    Returns the base of a type.
+    """
+    def getRootBaseType(self,typeName):
+        # Return itself if it is a base type.
+        if typeName is None or typeName in XSD_PRIMITIVE_TYPES:
+            return typeName
+
+        # Get the next type name and return itself if it doesn't exists.
+        nextType = self.getType(typeName)
+        nextElement = self.getElement(typeName)
+        if nextType is None and nextElement is None:
+            return typeName
+
+        # Return the next type.
+        if nextType is not None:
+            # Return the next type if it is an enum.
+            if isinstance(nextType,XSDData.XSDSimpleType) and nextType.isEnum():
+                return typeName
+
+            return self.getRootBaseType(nextType.base)
+        else:
+            return self.getRootBaseType(nextElement.base)
+
+    """
     Returns an XSD type for the given name.
     """
     def getType(self,typeName):
@@ -362,6 +386,35 @@ def flattenXSD(existingXSD):
     return newXSD
 
 """
+"Compresses" an XSD object (removes non-enum simple types).
+Modifies the existing object.
+"""
+def compressXSD(existingXSD):
+    # Flatten the complex types' child items.
+    # Complex types should never have simple types as bases.
+    simpleTypesToRemove = []
+    for type in existingXSD.types:
+        if isinstance(type,XSDData.XSDComplexType):
+            for item in type.childItems:
+                rootBase = str(existingXSD.getRootBaseType(item.type))
+                if rootBase in XSD_PRIMITIVE_TYPES:
+                    item.type = rootBase
+        else:
+            if type.isEnum():
+                rootBase = str(existingXSD.getRootBaseType(type.base))
+                if rootBase in XSD_PRIMITIVE_TYPES:
+                    type.base = rootBase
+            elif str(existingXSD.getRootBaseType(type.base)) in XSD_PRIMITIVE_TYPES:
+                simpleTypesToRemove.append(type)
+
+    # Remove the non-enum simple types.
+    for type in simpleTypesToRemove:
+        existingXSD.types.remove(type)
+
+    # Return the original XSD.
+    return existingXSD
+
+"""
 Validates that the types of a flatten XSD are valid.
 """
 def validateXSDTypes(xsd):
@@ -384,7 +437,7 @@ def validateXSDTypes(xsd):
 
     # Raise an error if validation failed.
     if invalidXSDs != "":
-        raise AttributeError("Missing inheritance references are detected in the following:\n\n" + invalidXSDs + "\nThis may be due to an incomplete list of primitives in the script, or incorrect inheritance references.")
+        raise AttributeError("Missing inheritance references are detected in the following:\n\n" + invalidXSDs + "\nThis may be due to an incomplete list of primitives in the script, incorrect compressing, or incorrect inheritance references.")
 
 
 
@@ -394,4 +447,5 @@ if __name__ == '__main__':
         contents = file.read()
 
     xsd = flattenXSD(processXSD(contents))
+    compressXSD(xsd)
     validateXSDTypes(xsd)

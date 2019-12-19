@@ -509,3 +509,109 @@ class XSDParserTests(unittest.TestCase):
         self.assertEqual(complexType.childItems[2].type,"string")
         self.assertEqual(complexType.childItems[3].name,"element3")
         self.assertEqual(complexType.childItems[3].type,"string")
+
+    """
+    Tests the getRootBaseType method.
+    """
+    def testGetRootBaseType(self):
+        xsdText = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" \
+                  "<xs:schema targetNamespace=\"http://www.vantivcnp.com/schema\" xmlns:xp=\"http://www.vantivcnp.com/schema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\">" \
+                  "    <xs:simpleType name=\"testSimpleType1\">" \
+                  "        <xs:restriction base=\"xs:string\">" \
+                  "            <xs:minLength value=\"1\" />" \
+                  "        </xs:restriction>" \
+                  "    </xs:simpleType>" \
+                  "    " \
+                  "    <xs:simpleType name=\"testSimpleType2\">" \
+                  "        <xs:restriction base=\"xs:string\">" \
+                  "            <xs:minLength value=\"1\" />" \
+                  "        </xs:restriction>" \
+                  "    </xs:simpleType>" \
+                  "    " \
+                  "    <xs:simpleType name=\"testSimpleType3\">" \
+                  "        <xs:restriction base=\"xs:integer\">" \
+                  "            <xs:minLength value=\"1\" />" \
+                  "        </xs:restriction>" \
+                  "    </xs:simpleType>" \
+                  "</xs:schema>"
+
+        # Parse the XSD text and assert it was parsed correctly.
+        xsd = XSDParser.processXSD(xsdText)
+        self.assertEqual(xsd.namespace, "http://www.vantivcnp.com/schema")
+        self.assertEqual(xsd.getRootBaseType("testSimpleType1"),"string")
+        self.assertEqual(xsd.getRootBaseType("testSimpleType2"),"string")
+        self.assertEqual(xsd.getRootBaseType("testSimpleType3"),"integer")
+
+    """
+    Tests the compressXSD method.
+    """
+    def testCompressXSD(self):
+        xsdText = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" \
+                  "<xs:schema targetNamespace=\"http://www.vantivcnp.com/schema\" xmlns:xp=\"http://www.vantivcnp.com/schema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\">" \
+                  "    <xs:simpleType name=\"testSimpleType1\">" \
+                  "        <xs:restriction base=\"xs:string\">" \
+                  "            <xs:minLength value=\"1\" />" \
+                  "        </xs:restriction>" \
+                  "    </xs:simpleType>" \
+                  "    " \
+                  "    <xs:simpleType name=\"testSimpleType2\">" \
+                  "        <xs:restriction base=\"xs:string\">" \
+                  "            <xs:minLength value=\"1\" />" \
+                  "        </xs:restriction>" \
+                  "    </xs:simpleType>" \
+                  "    " \
+                  "    <xs:simpleType name=\"testSimpleType3\">" \
+                  "        <xs:restriction base=\"xs:integer\">" \
+                  "            <xs:minLength value=\"1\" />" \
+                  "        </xs:restriction>" \
+                  "    </xs:simpleType>" \
+                  "    " \
+                  "    <xs:simpleType name=\"testSimpleType4\">" \
+                  "        <xs:restriction base=\"xs:unknown\">" \
+                  "            <xs:minLength value=\"1\" />" \
+                  "        </xs:restriction>" \
+                  "    </xs:simpleType>" \
+                  "    " \
+                  "    <xs:simpleType name=\"testSimpleType5\">" \
+                  "        <xs:restriction base=\"xs:string\">" \
+                  "            <xs:enumeration value=\"value1\" />" \
+                  "            <xs:enumeration value=\"value2\" />" \
+                  "            <xs:enumeration value=\"value3\" />" \
+                  "        </xs:restriction>" \
+                  "    </xs:simpleType>" \
+                  "    " \
+                  "    <xs:element name=\"customElement\">" \
+                  "        <xs:complexType>" \
+                  "            <xs:all>" \
+                  "                <xs:element name=\"element1\" type=\"testSimpleType1\" />" \
+                  "                <xs:element name=\"element2\" type=\"testSimpleType2\" />" \
+                  "                <xs:element name=\"element3\" type=\"testSimpleType3\" />" \
+                  "                <xs:element name=\"element4\" type=\"testSimpleType4\" />" \
+                  "                <xs:element name=\"element5\" type=\"testSimpleType5\" />" \
+                  "            </xs:all>" \
+                  "        </xs:complexType>" \
+                  "    </xs:element>" \
+                  "</xs:schema>"
+
+        # Parse the XSD text and assert it was parsed correctly.
+        xsd = XSDParser.processXSD(xsdText)
+        xsd = XSDParser.flattenXSD(xsd)
+        xsd = XSDParser.compressXSD(xsd)
+        self.assertEqual(xsd.namespace, "http://www.vantivcnp.com/schema")
+        self.assertIsNone(xsd.getType("testSimpleType1"))
+        self.assertIsNone(xsd.getType("testSimpleType2"))
+        self.assertIsNone(xsd.getType("testSimpleType3"))
+        simpleType = xsd.getType("testSimpleType4")
+        self.assertEqual(simpleType.name,"testSimpleType4")
+        self.assertEqual(simpleType.base,"unknown")
+        simpleEnum = xsd.getType("testSimpleType5")
+        self.assertEqual(simpleEnum.name,"testSimpleType5")
+        self.assertEqual(simpleEnum.base,"string")
+        self.assertEqual(simpleEnum.enums,["value1","value2","value3"])
+        simpleEnum = xsd.getType("customElement")
+        self.assertEqual(simpleEnum.name,"customElement")
+        self.assertEqual(simpleEnum.childItems[0].type,"string")
+        self.assertEqual(simpleEnum.childItems[1].type,"string")
+        self.assertEqual(simpleEnum.childItems[2].type,"integer")
+        self.assertEqual(simpleEnum.childItems[3].type,"testSimpleType4")
+        self.assertEqual(simpleEnum.childItems[4].type,"testSimpleType5")
