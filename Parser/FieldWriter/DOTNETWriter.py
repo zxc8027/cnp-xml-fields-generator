@@ -52,6 +52,24 @@ class DOTNETWriter(FieldWriter.FieldWriter):
         return "XmlFields.cs"
 
     """
+    Returns the removed version for a version.
+    """
+    def getRemovedVersion(self,version):
+        return self.versions[self.versions.index(version) + 1]
+
+    """
+    Creates an attribute.
+    """
+    def createAttribute(self,attributeName,name):
+        attribute = "[" + attributeName + "(Name = \"" + name.name + "\""
+        if name.start != self.versions[0]:
+            attribute += ",FirstVersion = \"" + name.start + "\""
+        if name.end != self.versions[len(self.versions) - 1]:
+            attribute += ",RemovedVersion = \"" + self.getRemovedVersion(name.end) + "\""
+
+        return attribute + "]"
+
+    """
     Returns the file contents as a string.
     """
     def getContents(self):
@@ -63,21 +81,49 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             enum = self.xsd.enums[enumName]
             generatedFile += "\tpublic enum " + enumName + "\n\t{\n"
 
+            # Add the enum items.
+            for enumItemName in enum.childItems.keys():
+                enumItem = enum.childItems[enumItemName]
+
+                # Change the name to allow it to be stored.
+                displayName = enumItemName.replace(" ","")
+                if enumItemName == "" or enumItemName[0:1].isdigit():
+                    displayName = "item" + enumItemName
+
+                # Create the attributes.
+                for name in enumItem.names:
+                    generatedFile += "\t\t" + self.createAttribute("XMLEnum",name) + "]\n"
+
+                # Add the enum item.
+                generatedFile += "\t\t" + displayName + ",\n\n"
+
             generatedFile += "\t}\n\n"
 
         # Add the classes.
         generatedFile += "\n\n" + createDeclarationHeader("Type declarations.")
         for className in self.xsd.simpleTypes.keys():
             type = self.xsd.simpleTypes[className]
+
+            # Write the attributes.
+            for name in type.names:
+                generatedFile += "\t" + self.createAttribute("XMLElement", name) + "\n"
+
+            # Write the class name.
             base = type.type
             if base is None:
                 base = "VersionedXMLElement"
-            generatedFile += "\tpublic class2 " + className + " : " + base + "\n\t{\n"
+            generatedFile += "\tpublic class " + className + " : " + base + "\n\t{\n"
 
             generatedFile += "\t}\n\n"
 
         for className in self.xsd.complexTypes.keys():
             type = self.xsd.complexTypes[className]
+
+            # Write the attributes.
+            for name in type.names:
+                generatedFile += "\t" + self.createAttribute("XMLElement",name) + "\n"
+
+            # Write the class name.
             base = type.type
             if base is None:
                 base = "VersionedXMLElement"
@@ -90,6 +136,12 @@ class DOTNETWriter(FieldWriter.FieldWriter):
         for className in self.xsd.elements.keys():
             if className not in self.xsd.simpleTypes.keys() and className not in self.xsd.complexTypes.keys():
                 type = self.xsd.elements[className]
+
+                # Write the attributes.
+                for name in type.names:
+                    generatedFile += "\t" + self.createAttribute("XMLElement", name) + "\n"
+
+                # Write the class name.
                 base = type.type
                 if base is None:
                     base = "VersionedXMLElement"
