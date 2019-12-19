@@ -25,6 +25,7 @@ OBJECT_TRANSLATIONS = {
     "dateTime": "DateTime",
     "integer": "int",
     "decimal": "string",
+    "base64Binary": "string",
     "boolean": "bool",
 }
 
