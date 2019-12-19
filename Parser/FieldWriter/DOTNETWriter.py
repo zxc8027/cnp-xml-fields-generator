@@ -14,10 +14,25 @@ FILE_HEADER = "/*\n" \
     " * Repo: https://github.com/zxc8027/cnp-xml-fields-generator\n" \
     " */\n" \
     "\n" \
+    "using System;\n" \
     "using Cnp.Sdk.VersionedXML;\n" \
     "\n" \
     "namespace Cnp.Sdk\n" \
     "{\n" \
+
+OBJECT_TRANSLATIONS = {
+    "date": "DateTime",
+    "dateTime": "DateTime",
+    "integer": "int",
+    "decimal": "string",
+    "boolean": "bool",
+}
+
+PRIMITIVE_TYPES = [
+    "int","short","long",
+    "float","double",
+    "bool",
+]
 
 
 
@@ -68,6 +83,21 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             attribute += ",RemovedVersion = \"" + self.getRemovedVersion(name.end) + "\""
 
         return attribute + "]"
+
+    """
+    Creates a string for the class name.
+    """
+    def getClassString(self,name):
+        # Change the name if it isn't valid for C#.
+        if name in OBJECT_TRANSLATIONS.keys():
+            name = OBJECT_TRANSLATIONS[name]
+
+        # Add a question mark (nullable) if it is an enum or primitive type.
+        if name in self.xsd.enums.keys() or name in PRIMITIVE_TYPES:
+            name += "?"
+
+        # Return the name.
+        return name
 
     """
     Returns the file contents as a string.
@@ -128,6 +158,18 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             if base is None:
                 base = "VersionedXMLElement"
             generatedFile += "\tpublic class " + className + " : " + base + "\n\t{\n"
+
+            # Write the properties.
+            for childName in type.childItems.keys():
+                child = type.childItems[childName]
+                childType = self.getClassString(child.type)
+
+                # Write the property attributes.
+                for name in child.names:
+                    generatedFile += "\t\t" + self.createAttribute("XML" + name.type,name) + "\n"
+
+                # Write the property.
+                generatedFile += "\t\tpublic " + childType + " " + childName + " { get; set; }\n\n"
 
             generatedFile += "\t}\n\n"
 
