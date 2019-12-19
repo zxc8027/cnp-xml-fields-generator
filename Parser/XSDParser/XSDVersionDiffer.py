@@ -9,7 +9,6 @@ Processes the differences between XSDs.
 from Parser.XSDParser import XSDData
 
 NAMES_TO_MERGE = {
-    "litleInternalRecurringRequestType": "cnpInternalRecurringRequestType",
     "litleRequest": "cnpRequest",
     "litleResponse": "cnpResponse",
     "litleOnlineRequest": "cnpOnlineRequest",
@@ -179,9 +178,9 @@ class VersionedXSD:
         # Add the enums.
         for child in complexType.childItems:
             if isinstance(child,XSDData.XSDChildElement):
-                item.addChildNameForVersion(child.name,child.name,child.type,version,"Element",child.default)
+                item.addChildNameForVersion(child.name,child.name,transformName(child.type),version,"Element",child.default)
             else:
-                item.addChildNameForVersion(child.name,child.name,child.type,version,"Attribute",child.default)
+                item.addChildNameForVersion(child.name,child.name,transformName(child.type),version,"Attribute",child.default)
 
     """
     Adds an element.
