@@ -4,12 +4,14 @@ Zachary Cook
 Runs the program and creates the program XML fields.
 """
 
+from Parser.FieldWriter import LanguageFieldWriter
 from Parser.XSDParser import XSDParser, XSDVersionDiffer
 from functools import cmp_to_key
 import os
 import re
 
 XSD_DIRECTORY = "xsd/"
+
 
 
 """
@@ -32,6 +34,7 @@ def compareSchemaNames(name1,name2):
         return minorVersion1 - minorVersion2
     else:
         return majorVersion1 - majorVersion2
+
 
 
 if __name__ == '__main__':
@@ -59,3 +62,6 @@ if __name__ == '__main__':
 
         print("Merging version " + version)
         versionedXSD.populateFromXSD(xsd,version)
+
+    # Write the files.
+    LanguageFieldWriter.writeFieldFiles(versionedXSD,versions)
