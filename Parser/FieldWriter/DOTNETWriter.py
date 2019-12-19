@@ -82,7 +82,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
         if name.end != self.versions[len(self.versions) - 1]:
             attribute += ",RemovedVersion = \"" + self.getRemovedVersion(name.end) + "\""
 
-        return attribute + "]"
+        return attribute + ")]"
 
     """
     Makes a string usable as an enum.
@@ -145,7 +145,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
 
                 # Create the attributes.
                 for name in enumItem.names:
-                    generatedFile += "\t\t" + self.createAttribute("XMLEnum",name) + "]\n"
+                    generatedFile += "\t\t" + self.createAttribute("XMLEnum",name) + "\n"
 
                 # Add the enum item.
                 generatedFile += "\t\t" + self.convertToEnum(enumItemName) + ",\n\n"
