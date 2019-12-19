@@ -6,6 +6,8 @@ Processes the differences between XSDs.
 
 
 # Names of objects to merge.
+from Parser.XSDParser import XSDData
+
 NAMES_TO_MERGE = {
     "litleInternalRecurringRequestType": "cnpInternalRecurringRequestType",
     "litleRequest": "cnpRequest",
@@ -107,3 +109,88 @@ class VersionedComposite(VersionedItem):
         # Merge the child items.
         for child in self.childItems.values():
             child.mergeNameVersions(versions)
+
+"""
+Class for storing XSD objects.
+"""
+class VersionedXSD:
+    """
+    Creates a versioned XSD object.
+    """
+    def __init__(self):
+        self.enums = {}
+        self.simpleTypes = {}
+        self.complexTypes = {}
+        self.elements = {}
+
+    """
+    Adds a simple type.
+    """
+    def addSimpleType(self,simpleType,version):
+        if simpleType.isEnum():
+            # Add the item if it doesn't exist.
+            if simpleType.name not in self.enums.keys():
+                self.enums[simpleType.name] = VersionedComposite(simpleType.base)
+
+            # Add the name.
+            item = self.enums[simpleType.name]
+            item.addNameForVersion(simpleType.name,version)
+
+            # Add the enums.
+            for enum in simpleType.enums:
+                item.addChildNameForVersion(enum,enum,simpleType.base,version)
+        else:
+            # Add the item if it doesn't exist.
+            if simpleType.name not in self.simpleTypes.keys():
+                self.simpleTypes[simpleType.name] = VersionedItem(simpleType.base)
+
+            # Add the name.
+            self.simpleTypes[simpleType.name].addNameForVersion(simpleType.name,version)
+
+    """
+    Adds a complex type.
+    """
+    def addComplexType(self,complexType,version):
+        pass
+
+    """
+    Adds an element.
+    """
+    def addElement(self,element,version):
+        pass
+
+    """
+    Populates the object from an XSD object.
+    """
+    def populateFromXSD(self,xsd,version):
+        # Add the types.
+        for type in xsd.types:
+            if isinstance(type,XSDData.XSDSimpleType):
+                self.addSimpleType(type,version)
+            else:
+                self.addComplexType(type,version)
+
+        # Add the elements.
+        for element in xsd.elements:
+            self.addElement(element,version)
+
+    """
+    Merges the names together.
+    Assumes the versions are in order.
+    """
+    def mergeNameVersions(self,versions):
+        # Merge the simple types.
+        for simpleType in self.simpleTypes.values():
+            simpleType.mergeNameVersions(versions)
+
+        # Merge the enums.
+        for enum in self.enums.values():
+            enum.mergeNameVersions(versions)
+
+        # Merge the complex types.
+        for complexType in self.complexTypes.values():
+            complexType.mergeNameVersions(versions)
+
+        # Merge the elements.
+        for element in self.elements.values():
+            element.mergeNameVersions(versions)

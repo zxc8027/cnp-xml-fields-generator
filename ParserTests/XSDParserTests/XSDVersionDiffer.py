@@ -5,7 +5,7 @@ Tests the XSD differ.
 """
 
 import unittest
-from Parser.XSDParser import XSDVersionDiffer
+from Parser.XSDParser import XSDVersionDiffer, XSDData
 
 
 class VersionedItemTests(unittest.TestCase):
@@ -100,3 +100,134 @@ class VersionedCompositeTests(unittest.TestCase):
         self.assertEqual(item.childItems["TestElement3"].names[1].name,"TestElement3")
         self.assertEqual(item.childItems["TestElement3"].names[1].start,"1.4")
         self.assertEqual(item.childItems["TestElement3"].names[1].end,"1.4")
+
+
+
+class VersionedXSDTests(unittest.TestCase):
+    """
+    Tests the addSimpleType method.
+    """
+    def testAddSimpleType(self):
+        # Create several simple types.
+        simpleType1 = XSDData.XSDSimpleType("Test1","string")
+        simpleType2A = XSDData.XSDSimpleType("Test2","string")
+        simpleType2A.enums = ["Enum1","Enum2","Enum3"]
+        simpleType2B = XSDData.XSDSimpleType("Test2","string")
+        simpleType2B.enums = ["Enum1","Enum2","Enum3","Enum4"]
+        simpleType3 = XSDData.XSDSimpleType("Test3","int")
+
+        # Create the versioned XSD and add the simple types.
+        xsd = XSDVersionDiffer.VersionedXSD()
+        xsd.addSimpleType(simpleType1,"1.0")
+        xsd.addSimpleType(simpleType2A,"1.0")
+        xsd.addSimpleType(simpleType1,"1.1")
+        xsd.addSimpleType(simpleType2B,"1.1")
+        xsd.addSimpleType(simpleType2A,"1.2")
+        xsd.addSimpleType(simpleType3,"1.2")
+
+        # Assert the simple types were added correctly.
+        self.assertEqual(len(xsd.simpleTypes),2)
+        self.assertEqual(xsd.simpleTypes["Test1"].type,"string")
+        self.assertEqual(len(xsd.simpleTypes["Test1"].names),2)
+        self.assertEqual(xsd.simpleTypes["Test1"].names[0].name,"Test1")
+        self.assertEqual(xsd.simpleTypes["Test1"].names[0].start,"1.0")
+        self.assertEqual(xsd.simpleTypes["Test1"].names[0].end,"1.0")
+        self.assertEqual(xsd.simpleTypes["Test1"].names[1].name,"Test1")
+        self.assertEqual(xsd.simpleTypes["Test1"].names[1].start,"1.1")
+        self.assertEqual(xsd.simpleTypes["Test1"].names[1].end,"1.1")
+        self.assertEqual(xsd.simpleTypes["Test3"].type,"int")
+        self.assertEqual(len(xsd.simpleTypes["Test3"].names),1)
+        self.assertEqual(xsd.simpleTypes["Test3"].names[0].name,"Test3")
+        self.assertEqual(xsd.simpleTypes["Test3"].names[0].start,"1.2")
+        self.assertEqual(xsd.simpleTypes["Test3"].names[0].end,"1.2")
+
+        # Assert the enums were added correctly.
+        self.assertEqual(len(xsd.enums),1)
+        self.assertEqual(xsd.enums["Test2"].type,"string")
+        self.assertEqual(len(xsd.enums["Test2"].names),3)
+        self.assertEqual(xsd.enums["Test2"].names[0].name,"Test2")
+        self.assertEqual(xsd.enums["Test2"].names[0].start,"1.0")
+        self.assertEqual(xsd.enums["Test2"].names[0].end,"1.0")
+        self.assertEqual(xsd.enums["Test2"].names[1].name,"Test2")
+        self.assertEqual(xsd.enums["Test2"].names[1].start,"1.1")
+        self.assertEqual(xsd.enums["Test2"].names[1].end,"1.1")
+        self.assertEqual(xsd.enums["Test2"].names[2].name,"Test2")
+        self.assertEqual(xsd.enums["Test2"].names[2].start,"1.2")
+        self.assertEqual(xsd.enums["Test2"].names[2].end,"1.2")
+        self.assertEqual(len(xsd.enums["Test2"].childItems),4)
+        self.assertEqual(len(xsd.enums["Test2"].childItems["Enum1"].names),3)
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[0].name,"Enum1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[0].start,"1.0")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[0].end,"1.0")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[1].name,"Enum1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[1].start,"1.1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[1].end,"1.1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[2].name,"Enum1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[2].start,"1.2")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[2].end,"1.2")
+        self.assertEqual(len(xsd.enums["Test2"].childItems["Enum2"].names),3)
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[0].name,"Enum2")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[0].start,"1.0")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[0].end,"1.0")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[1].name,"Enum2")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[1].start,"1.1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[1].end,"1.1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[2].name,"Enum2")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[2].start,"1.2")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[2].end,"1.2")
+        self.assertEqual(len(xsd.enums["Test2"].childItems["Enum3"].names),3)
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[0].name,"Enum3")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[0].start,"1.0")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[0].end,"1.0")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[1].name,"Enum3")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[1].start,"1.1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[1].end,"1.1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[2].name,"Enum3")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[2].start,"1.2")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[2].end,"1.2")
+        self.assertEqual(len(xsd.enums["Test2"].childItems["Enum4"].names),1)
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum4"].names[0].name,"Enum4")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum4"].names[0].start,"1.1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum4"].names[0].end,"1.1")
+
+        # Merge the XSDs together.
+        xsd.mergeNameVersions(["1.0","1.1","1.2"])
+
+        # Assert the merged simple types are correct.
+        self.assertEqual(len(xsd.simpleTypes),2)
+        self.assertEqual(xsd.simpleTypes["Test1"].type,"string")
+        self.assertEqual(len(xsd.simpleTypes["Test1"].names),1)
+        self.assertEqual(xsd.simpleTypes["Test1"].names[0].name,"Test1")
+        self.assertEqual(xsd.simpleTypes["Test1"].names[0].start,"1.0")
+        self.assertEqual(xsd.simpleTypes["Test1"].names[0].end,"1.1")
+        self.assertEqual(xsd.simpleTypes["Test3"].type,"int")
+        self.assertEqual(len(xsd.simpleTypes["Test3"].names),1)
+        self.assertEqual(xsd.simpleTypes["Test3"].names[0].name,"Test3")
+        self.assertEqual(xsd.simpleTypes["Test3"].names[0].start,"1.2")
+        self.assertEqual(xsd.simpleTypes["Test3"].names[0].end,"1.2")
+
+        # Assert the merged enums are correct.
+        self.assertEqual(len(xsd.enums),1)
+        self.assertEqual(xsd.enums["Test2"].type,"string")
+        self.assertEqual(len(xsd.enums["Test2"].names),1)
+        self.assertEqual(xsd.enums["Test2"].names[0].name,"Test2")
+        self.assertEqual(xsd.enums["Test2"].names[0].start,"1.0")
+        self.assertEqual(xsd.enums["Test2"].names[0].end,"1.2")
+        self.assertEqual(len(xsd.enums["Test2"].childItems),4)
+        self.assertEqual(len(xsd.enums["Test2"].childItems["Enum1"].names),1)
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[0].name,"Enum1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[0].start,"1.0")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum1"].names[0].end,"1.2")
+        self.assertEqual(len(xsd.enums["Test2"].childItems["Enum2"].names),1)
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[0].name,"Enum2")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[0].start,"1.0")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum2"].names[0].end,"1.2")
+        self.assertEqual(len(xsd.enums["Test2"].childItems["Enum3"].names),1)
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[0].name,"Enum3")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[0].start,"1.0")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum3"].names[0].end,"1.2")
+        self.assertEqual(len(xsd.enums["Test2"].childItems["Enum4"].names),1)
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum4"].names[0].name,"Enum4")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum4"].names[0].start,"1.1")
+        self.assertEqual(xsd.enums["Test2"].childItems["Enum4"].names[0].end,"1.1")
+
