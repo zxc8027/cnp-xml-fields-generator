@@ -59,12 +59,43 @@ class DOTNETWriter(FieldWriter.FieldWriter):
 
         # Add the enums.
         generatedFile += createDeclarationHeader("Enum declarations.")
+        for enumName in self.xsd.enums.keys():
+            enum = self.xsd.enums[enumName]
+            generatedFile += "\tpublic enum " + enumName + "\n\t{\n"
+
+            generatedFile += "\t}\n\n"
 
         # Add the classes.
-        generatedFile += "\n\n\n" + createDeclarationHeader("Type declarations.")
+        generatedFile += "\n\n" + createDeclarationHeader("Type declarations.")
+        for className in self.xsd.simpleTypes.keys():
+            type = self.xsd.simpleTypes[className]
+            base = type.type
+            if base is None:
+                base = "VersionedXMLElement"
+            generatedFile += "\tpublic class2 " + className + " : " + base + "\n\t{\n"
+
+            generatedFile += "\t}\n\n"
+
+        for className in self.xsd.complexTypes.keys():
+            type = self.xsd.complexTypes[className]
+            base = type.type
+            if base is None:
+                base = "VersionedXMLElement"
+            generatedFile += "\tpublic class " + className + " : " + base + "\n\t{\n"
+
+            generatedFile += "\t}\n\n"
 
         # Add the classes.
-        generatedFile += "\n\n\n" + createDeclarationHeader("Element declarations.")
+        generatedFile += "\n\n" + createDeclarationHeader("Element declarations.")
+        for className in self.xsd.elements.keys():
+            if className not in self.xsd.simpleTypes.keys() and className not in self.xsd.complexTypes.keys():
+                type = self.xsd.elements[className]
+                base = type.type
+                if base is None:
+                    base = "VersionedXMLElement"
+                generatedFile += "\tpublic class " + className + " : " + base + "\n\t{\n"
+
+                generatedFile += "\t}\n\n"
 
         # Return the file.
         return generatedFile + "}"
