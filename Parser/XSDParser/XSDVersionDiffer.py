@@ -51,10 +51,11 @@ class VersionedItem:
     """
     Creates a versioned item.
     """
-    def __init__(self,type):
+    def __init__(self,type,default=None):
         self.names = []
         self.nameRefs = {}
         self.type = type
+        self.default = default
 
     """
     Adds a name for a version.
@@ -105,10 +106,10 @@ class VersionedComposite(VersionedItem):
     """
     Adds a name for a child item.
     """
-    def addChildNameForVersion(self,commonName,encodeName,base,version,type=None):
+    def addChildNameForVersion(self,commonName,encodeName,base,version,type=None,default=None):
         # Create the child element if it doesn't exist.
         if commonName not in self.childItems.keys():
-            self.childItems[commonName] = VersionedItem(base)
+            self.childItems[commonName] = VersionedItem(base,default)
 
         # Add the version.
         self.childItems[commonName].addNameForVersion(encodeName,version,type)
@@ -178,9 +179,9 @@ class VersionedXSD:
         # Add the enums.
         for child in complexType.childItems:
             if isinstance(child,XSDData.XSDChildElement):
-                item.addChildNameForVersion(child.name,child.name,child.type,version,"Element")
+                item.addChildNameForVersion(child.name,child.name,child.type,version,"Element",child.default)
             else:
-                item.addChildNameForVersion(child.name,child.name,child.type,version,"Attribute")
+                item.addChildNameForVersion(child.name,child.name,child.type,version,"Attribute",child.default)
 
     """
     Adds an element.

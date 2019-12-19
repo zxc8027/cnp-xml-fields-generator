@@ -85,6 +85,16 @@ class DOTNETWriter(FieldWriter.FieldWriter):
         return attribute + "]"
 
     """
+    Makes a string usable as an enum.
+    """
+    def convertToEnum(self,enumValue):
+        enumValue = enumValue.replace(" ", "")
+        if enumValue == "" or enumValue[0:1].isdigit():
+            enumValue = "item" + enumValue
+
+        return enumValue
+
+    """
     Creates a string for the class name.
     """
     def getClassString(self,name):
@@ -98,6 +108,24 @@ class DOTNETWriter(FieldWriter.FieldWriter):
 
         # Return the name.
         return name
+
+    """
+    Returns the representation of an object.
+    """
+    def getObjectString(self,childType,value):
+        # Remove the "?" from the end.
+        childType = childType.replace("?","")
+
+        # Return an enum if it is an enum.
+        if childType in self.xsd.enums.keys():
+            return childType + "." + self.convertToEnum(value)
+
+        # Return a string.
+        if childType == "string":
+            return "\"" + value + "\""
+
+        # Return itself.
+        return value
 
     """
     Returns the file contents as a string.
@@ -115,17 +143,12 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             for enumItemName in enum.childItems.keys():
                 enumItem = enum.childItems[enumItemName]
 
-                # Change the name to allow it to be stored.
-                displayName = enumItemName.replace(" ","")
-                if enumItemName == "" or enumItemName[0:1].isdigit():
-                    displayName = "item" + enumItemName
-
                 # Create the attributes.
                 for name in enumItem.names:
                     generatedFile += "\t\t" + self.createAttribute("XMLEnum",name) + "]\n"
 
                 # Add the enum item.
-                generatedFile += "\t\t" + displayName + ",\n\n"
+                generatedFile += "\t\t" + self.convertToEnum(enumItemName) + ",\n\n"
 
             generatedFile += "\t}\n\n"
 
@@ -136,7 +159,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
 
             # Write the attributes.
             for name in type.names:
-                generatedFile += "\t" + self.createAttribute("XMLElement", name) + "\n"
+                generatedFile += "\t" + self.createAttribute("XMLElement",name) + "\n"
 
             # Write the class name.
             base = type.type
@@ -169,7 +192,10 @@ class DOTNETWriter(FieldWriter.FieldWriter):
                     generatedFile += "\t\t" + self.createAttribute("XML" + name.type,name) + "\n"
 
                 # Write the property.
-                generatedFile += "\t\tpublic " + childType + " " + childName + " { get; set; }\n\n"
+                generatedFile += "\t\tpublic " + childType + " " + childName + " { get; set; }"
+                if child.default is not None:
+                    generatedFile += " = " + self.getObjectString(childType,child.default) + ";"
+                generatedFile += "\n\n"
 
             generatedFile += "\t}\n\n"
 
