@@ -19,6 +19,19 @@ NAMES_TO_MERGE = {
 
 
 """
+Transform a name if it should be changed.
+"""
+def transformName(name):
+    # Set the name if it exists to merge.
+    if name in NAMES_TO_MERGE.keys():
+        name = NAMES_TO_MERGE[name]
+
+    # Return the name.
+    return name
+
+
+
+"""
 Class representing a name version.
 """
 class NameVersion:
@@ -131,7 +144,7 @@ class VersionedXSD:
         if simpleType.isEnum():
             # Add the item if it doesn't exist.
             if simpleType.name not in self.enums.keys():
-                self.enums[simpleType.name] = VersionedComposite(simpleType.base)
+                self.enums[simpleType.name] = VersionedComposite(transformName(simpleType.base))
 
             # Add the name.
             item = self.enums[simpleType.name]
@@ -139,11 +152,11 @@ class VersionedXSD:
 
             # Add the enums.
             for enum in simpleType.enums:
-                item.addChildNameForVersion(enum,enum,simpleType.base,version)
+                item.addChildNameForVersion(enum,enum,transformName(simpleType.base),version)
         else:
             # Add the item if it doesn't exist.
             if simpleType.name not in self.simpleTypes.keys():
-                self.simpleTypes[simpleType.name] = VersionedItem(simpleType.base)
+                self.simpleTypes[simpleType.name] = VersionedItem(transformName(simpleType.base))
 
             # Add the name.
             self.simpleTypes[simpleType.name].addNameForVersion(simpleType.name,version)
@@ -152,14 +165,11 @@ class VersionedXSD:
     Adds a complex type.
     """
     def addComplexType(self,complexType,version):
-        # Get the name to store.
-        storeName = complexType.name
-        if storeName in NAMES_TO_MERGE.keys():
-            storeName = NAMES_TO_MERGE[storeName]
+        storeName = transformName(complexType.name)
 
         # Add the item if it doesn't exist.
         if storeName not in self.complexTypes.keys():
-            self.complexTypes[storeName] = VersionedComposite(complexType.base)
+            self.complexTypes[storeName] = VersionedComposite(transformName(complexType.base))
 
         # Add the name.
         item = self.complexTypes[storeName]
@@ -176,7 +186,15 @@ class VersionedXSD:
     Adds an element.
     """
     def addElement(self,element,version):
-        pass
+        storeName = transformName(element.name)
+
+        # Add the item if it doesn't exist.
+        if storeName not in self.elements.keys():
+            self.elements[storeName] = VersionedComposite(transformName(element.base))
+
+        # Add the name.
+        item = self.elements[storeName]
+        item.addNameForVersion(element.name,version)
 
     """
     Populates the object from an XSD object.
