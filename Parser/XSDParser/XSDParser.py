@@ -10,7 +10,7 @@ from Parser.XSDParser import XSDData
 
 
 XSD_PRIMITIVE_TYPES = [
-    "int","integer","long","decimal",
+    "int","integer","short","long","decimal",
     "string","base64Binary",
     "boolean",
     "dateTime","date",
@@ -439,13 +439,20 @@ def validateXSDTypes(xsd):
     if invalidXSDs != "":
         raise AttributeError("Missing inheritance references are detected in the following:\n\n" + invalidXSDs + "\nThis may be due to an incomplete list of primitives in the script, incorrect compressing, or incorrect inheritance references.")
 
-
-
-if __name__ == '__main__':
-
-    with open("../../xsd/SchemaCombined_v12.10.xsd") as file:
+"""
+Creates a flattened and compressed XSD object
+from a file.
+"""
+def createFromFile(fileName):
+    # Get the contents of the file.
+    with open(fileName) as file:
         contents = file.read()
 
-    xsd = flattenXSD(processXSD(contents))
-    compressXSD(xsd)
+    # Create and process the XSD.
+    xsd = processXSD(contents)
+    xsd = flattenXSD(xsd)
+    xsd = compressXSD(xsd)
+
+    # Validate and return the XSD.
     validateXSDTypes(xsd)
+    return xsd
