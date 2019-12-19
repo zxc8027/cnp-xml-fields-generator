@@ -63,5 +63,8 @@ if __name__ == '__main__':
         print("Merging version " + version)
         versionedXSD.populateFromXSD(xsd,version)
 
+    # Merge the versions.
+    versionedXSD.mergeNameVersions(versions)
+
     # Write the files.
     LanguageFieldWriter.writeFieldFiles(versionedXSD,versions)
