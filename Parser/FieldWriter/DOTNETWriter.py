@@ -191,7 +191,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             base = type.type
             if base is None:
                 base = "VersionedXMLElement"
-            generatedFile += "\tpublic class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
+            generatedFile += "\tpublic partial class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
 
             generatedFile += "\t}\n\n"
 
@@ -206,7 +206,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             base = type.type
             if base is None:
                 base = "VersionedXMLElement"
-            generatedFile += "\tpublic class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
+            generatedFile += "\tpublic partial class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
 
             # Write the properties.
             for childName in type.childItems.keys():
@@ -239,7 +239,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
                 base = type.type
                 if base is None:
                     base = "VersionedXMLElement"
-                generatedFile += "\tpublic class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
+                generatedFile += "\tpublic partial class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
 
                 generatedFile += "\t}\n\n"
 
