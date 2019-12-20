@@ -109,9 +109,13 @@ class DOTNETWriter(FieldWriter.FieldWriter):
     """
     Creates a string for the class name.
     """
-    def getClassString(self,name):
+    def getClassString(self,name,maxOccurences = 1):
         # Change the name if it isn't valid for C#.
         name = self.transformClassName(name)
+
+        # Make the object a list if there can be more than one.
+        if maxOccurences is not None and maxOccurences > 1:
+            name = "List<" + name + ">"
 
         # Add a question mark (nullable) if it is an enum or primitive type.
         if name in self.xsd.enums.keys() or name in PRIMITIVE_TYPES:
@@ -211,7 +215,7 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             # Write the properties.
             for childName in type.childItems.keys():
                 child = type.childItems[childName]
-                childType = self.getClassString(child.type)
+                childType = self.getClassString(child.type,child.maxOccurences)
 
                 # Write the property attributes.
                 for name in child.names:
@@ -221,6 +225,8 @@ class DOTNETWriter(FieldWriter.FieldWriter):
                 generatedFile += "\t\tpublic " + childType + " " + childName + " { get; set; }"
                 if child.default is not None:
                     generatedFile += " = " + self.getObjectString(child.type,child.default) + ";"
+                elif child.maxOccurences is not None and child.maxOccurences > 1:
+                    generatedFile += " = new " + childType + "();"
                 generatedFile += "\n\n"
 
             generatedFile += "\t}\n\n"

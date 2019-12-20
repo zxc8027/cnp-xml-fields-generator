@@ -78,11 +78,13 @@ class VersionedItem:
     """
     Creates a versioned item.
     """
-    def __init__(self,type,default=None):
+    def __init__(self,type,default=None,minOccurences=None,maxOccurences=None):
         self.names = []
         self.nameRefs = {}
         self.type = type
         self.default = default
+        self.minOccurences = minOccurences
+        self.maxOccurences = maxOccurences
 
     """
     Adds a name for a version.
@@ -141,10 +143,10 @@ class VersionedComposite(VersionedItem):
     """
     Adds a name for a child item.
     """
-    def addChildNameForVersion(self,commonName,encodeName,base,version,type=None,default=None):
+    def addChildNameForVersion(self,commonName,encodeName,base,version,type=None,default=None,minOccurences=None,maxOccurences=None):
         # Create the child element if it doesn't exist.
         if commonName not in self.childItems.keys():
-            self.childItems[commonName] = VersionedItem(base,default)
+            self.childItems[commonName] = VersionedItem(base,default,minOccurences,maxOccurences)
 
         # Add the version.
         self.childItems[commonName].addNameForVersion(encodeName,version,type)
@@ -231,7 +233,7 @@ class VersionedXSD:
         # Add the enums.
         for child in complexType.childItems:
             if isinstance(child,XSDData.XSDChildElement):
-                item.addChildNameForVersion(child.name,child.name,transformName(child.type),version,"Element",child.default)
+                item.addChildNameForVersion(child.name,child.name,transformName(child.type),version,"Element",child.default,child.minOccurrences,child.maxOccurrences)
             else:
                 item.addChildNameForVersion(child.name,child.name,transformName(child.type),version,"Attribute",child.default)
 
