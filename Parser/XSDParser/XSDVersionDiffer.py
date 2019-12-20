@@ -4,10 +4,11 @@ Zachary Cook
 Processes the differences between XSDs.
 """
 
+from Parser.XSDParser import XSDData
+from functools import cmp_to_key
+import re
 
 # Names of objects to merge.
-from Parser.XSDParser import XSDData
-
 NAMES_TO_MERGE = {
     "litleRequest": "cnpRequest",
     "litleResponse": "cnpResponse",
@@ -27,6 +28,33 @@ def transformName(name):
 
     # Return the name.
     return name
+
+"""
+Returns the major version and minor
+version for a given file name.
+"""
+def getVersionFromName(name):
+    version = re.findall(r'\d+',name)
+    return int(version[0]),int(version[1])
+
+"""
+Compares two version names.
+"""
+def compareVersionNames(name1,name2):
+    majorVersion1,minorVersion1 = getVersionFromName(name1)
+    majorVersion2,minorVersion2 = getVersionFromName(name2)
+
+    # Compare the versions.
+    if majorVersion1 == majorVersion2:
+        return minorVersion1 - minorVersion2
+    else:
+        return majorVersion1 - majorVersion2
+
+"""
+Sorts two name versions.
+"""
+def sortNameVersions(version1,version2):
+    return compareVersionNames(version1.start,version2.start)
 
 
 
@@ -61,8 +89,8 @@ class VersionedItem:
     """
     def addNameForVersion(self,name,version,type=None):
         versionTag = NameVersion(name,version,version,type)
-        self.names.append(versionTag)
         self.nameRefs[version] = versionTag
+        self.names.append(versionTag)
 
     """
     Merges the names together.
@@ -72,6 +100,9 @@ class VersionedItem:
         # Return if there aren't names to merge.
         if len(self.names) <= 1:
             return
+
+        # Sort the names.
+        self.names = sorted(self.names,key=cmp_to_key(sortNameVersions))
 
         # Find the first version index:
         currentVersionTag = 0

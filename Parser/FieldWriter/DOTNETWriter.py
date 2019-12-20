@@ -139,6 +139,13 @@ class DOTNETWriter(FieldWriter.FieldWriter):
         if childType in self.xsd.enums.keys():
             return self.transformClassName(childType) + "." + self.convertToEnum(value)
 
+        # Correct bools being numbers.
+        if childType == "bool" or childType == "boolean":
+            if value == "0":
+                return "false"
+            elif value == "1":
+                return "true"
+
         # Return a string.
         if childType == "string":
             return "\"" + value + "\""
