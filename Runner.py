@@ -13,10 +13,6 @@ XSD_DIRECTORY = "xsd/"
 
 
 
-
-
-
-
 if __name__ == '__main__':
     # Get the files to read and sort them.
     filesToRead = os.listdir(XSD_DIRECTORY)

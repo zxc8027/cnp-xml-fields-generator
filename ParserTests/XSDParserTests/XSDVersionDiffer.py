@@ -458,3 +458,60 @@ class VersionedXSDTests(unittest.TestCase):
         self.assertEqual(xsd.elements["cnpRequest"].names[1].end,"1.2")
         self.assertEqual(xsd.elements["cnpRequest"].names[1].name,"cnpRequest")
         self.assertEqual(xsd.elements["cnpRequest"].names[1].type,None)
+
+    """
+    Tests merging superclass items in complex types.
+    """
+    def testMergingSuperclasses(self):
+        # Create several complex types.
+        testChildElement = XSDData.XSDChildElement("Test","string")
+        testAttribute = XSDData.XSDAttribute("Test","string")
+        testElement1 = XSDData.XSDComplexType("cnpRequest1",None)
+        testElement1.childItems = [testChildElement,XSDData.XSDChildElement("Test3","string")]
+        testElement2 = XSDData.XSDComplexType("cnpRequest2","cnpRequest1")
+        testElement2.childItems = [testChildElement]
+        testElement3 = XSDData.XSDComplexType("cnpRequest3","cnpRequest2")
+        testElement3.childItems = [testAttribute,XSDData.XSDChildElement("Test2","string")]
+
+        # Create the versioned XSD and add the complex types.
+        xsd = XSDVersionDiffer.VersionedXSD()
+        xsd.addComplexType(testElement1,"1.0")
+        xsd.addComplexType(testElement2,"1.1")
+        xsd.addComplexType(testElement3,"1.2")
+
+        # Assert the findings of implementation are correct.
+        self.assertEqual(xsd.getComplexTypeWithChild("cnpRequest3","Test"),"cnpRequest3")
+        self.assertEqual(xsd.getComplexTypeWithChild("cnpRequest3","Test2"),"cnpRequest3")
+        self.assertEqual(xsd.getComplexTypeWithChild("cnpRequest3","Test3"),"cnpRequest1")
+        self.assertEqual(xsd.getComplexTypeWithChild("cnpRequest2","Test"),"cnpRequest2")
+        self.assertEqual(xsd.getComplexTypeWithChild("cnpRequest2","Test2"),None)
+        self.assertEqual(xsd.getComplexTypeWithChild("cnpRequest2","Test3"),"cnpRequest1")
+        self.assertEqual(xsd.getComplexTypeWithChild("cnpRequest1","Test"),"cnpRequest1")
+        self.assertEqual(xsd.getComplexTypeWithChild("cnpRequest1","Test2"),None)
+        self.assertEqual(xsd.getComplexTypeWithChild("cnpRequest1","Test3"),"cnpRequest1")
+
+        # Merge the XSDs together.
+        xsd.mergeNameVersions(["1.0","1.1","1.2"])
+
+        # Assert the merged complex type is correct.
+        self.assertEqual(len(xsd.complexTypes.keys()),3)
+        self.assertEqual(xsd.complexTypes["cnpRequest1"].type,None)
+        self.assertEqual(xsd.complexTypes["cnpRequest2"].type,"cnpRequest1")
+        self.assertEqual(xsd.complexTypes["cnpRequest3"].type,"cnpRequest2")
+        self.assertEqual(len(xsd.complexTypes["cnpRequest1"].childItems.keys()),2)
+        self.assertEqual(len(xsd.complexTypes["cnpRequest1"].childItems["Test"].names),2)
+        self.assertEqual(len(xsd.complexTypes["cnpRequest1"].childItems["Test3"].names),1)
+        self.assertEqual(xsd.complexTypes["cnpRequest1"].childItems["Test"].names[0].start,"1.0")
+        self.assertEqual(xsd.complexTypes["cnpRequest1"].childItems["Test"].names[0].end,"1.1")
+        self.assertEqual(xsd.complexTypes["cnpRequest1"].childItems["Test"].names[0].name,"Test")
+        self.assertEqual(xsd.complexTypes["cnpRequest1"].childItems["Test"].names[0].type,"Element")
+        self.assertEqual(xsd.complexTypes["cnpRequest1"].childItems["Test"].names[1].start,"1.2")
+        self.assertEqual(xsd.complexTypes["cnpRequest1"].childItems["Test"].names[1].end,"1.2")
+        self.assertEqual(xsd.complexTypes["cnpRequest1"].childItems["Test"].names[1].name,"Test")
+        self.assertEqual(xsd.complexTypes["cnpRequest1"].childItems["Test"].names[1].type,"Attribute")
+        self.assertEqual(len(xsd.complexTypes["cnpRequest2"].childItems.keys()),0)
+        self.assertEqual(len(xsd.complexTypes["cnpRequest3"].childItems.keys()),1)
+        self.assertEqual(xsd.complexTypes["cnpRequest3"].childItems["Test2"].names[0].start,"1.2")
+        self.assertEqual(xsd.complexTypes["cnpRequest3"].childItems["Test2"].names[0].end,"1.2")
+        self.assertEqual(xsd.complexTypes["cnpRequest3"].childItems["Test2"].names[0].name,"Test2")
+        self.assertEqual(xsd.complexTypes["cnpRequest3"].childItems["Test2"].names[0].type,"Element")

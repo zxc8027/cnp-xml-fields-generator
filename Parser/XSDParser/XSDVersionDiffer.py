@@ -174,6 +174,23 @@ class VersionedXSD:
         self.elements = {}
 
     """
+    Returns the complex type that contains a child
+    with the name.
+    """
+    def getComplexTypeWithChild(self,type,itemName):
+        # Return none if the type is undefined.
+        if type is None:
+            return None
+
+        # Get the type and return if it contains the child.
+        complexType = self.complexTypes[type]
+        if itemName in complexType.childItems.keys():
+            return type
+
+        # Return the base's result.
+        return self.getComplexTypeWithChild(complexType.type,itemName)
+
+    """
     Adds a simple type.
     """
     def addSimpleType(self,simpleType,version):
@@ -252,6 +269,20 @@ class VersionedXSD:
     Assumes the versions are in order.
     """
     def mergeNameVersions(self,versions):
+        # Remove the duplicate children of the complex types. Simple types, enums, and elements don't have this problem.
+        for complexType in self.complexTypes.values():
+            for childName in list(complexType.childItems.keys()):
+                child = complexType.childItems[childName]
+                parentWithChildName = self.getComplexTypeWithChild(complexType.type,childName)
+
+                # Merge the parent element if it exists.
+                if parentWithChildName is not None:
+                    parent = self.complexTypes[parentWithChildName]
+                    for name in child.names:
+                        parent.addChildNameForVersion(childName,name.name,child.type,name.start,name.type,child.default)
+
+                    del complexType.childItems[childName]
+
         # Merge the simple types.
         for simpleType in self.simpleTypes.values():
             simpleType.mergeNameVersions(versions)
