@@ -88,6 +88,11 @@ class VersionedItem:
     Adds a name for a version.
     """
     def addNameForVersion(self,name,version,type=None):
+        # Return if the version exists.
+        if version in self.nameRefs.keys():
+            return
+
+        # Add the version.
         versionTag = NameVersion(name,version,version,type)
         self.nameRefs[version] = versionTag
         self.names.append(versionTag)

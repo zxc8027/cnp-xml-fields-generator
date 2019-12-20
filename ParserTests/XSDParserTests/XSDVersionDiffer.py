@@ -92,6 +92,27 @@ class VersionedItemTests(unittest.TestCase):
         self.assertEqual(item.names[5].end,"9.8")
         self.assertEqual(item.names[5].type,"Element")
 
+    """
+    Tests the addNameForVersion method with duplicates.
+    """
+    def testAddNameForVersionDuplicates(self):
+        # Create a versioned item and add names.
+        item = XSDVersionDiffer.VersionedItem("type")
+        item.addNameForVersion("TestName1","8.4","Element")
+        item.addNameForVersion("TestName1","8.5","Element")
+        item.addNameForVersion("TestName1","8.5","Element")
+
+        # Assert duplicate entries aren't created.
+        self.assertEqual(len(item.names),2)
+        self.assertEqual(item.names[0].name,"TestName1")
+        self.assertEqual(item.names[0].start,"8.4")
+        self.assertEqual(item.names[0].end,"8.4")
+        self.assertEqual(item.names[0].type,"Element")
+        self.assertEqual(item.names[1].name,"TestName1")
+        self.assertEqual(item.names[1].start,"8.5")
+        self.assertEqual(item.names[1].end,"8.5")
+        self.assertEqual(item.names[1].type,"Element")
+
 
 
 class VersionedCompositeTests(unittest.TestCase):
