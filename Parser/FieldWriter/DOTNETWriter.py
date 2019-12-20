@@ -15,6 +15,7 @@ FILE_HEADER = "/*\n" \
     " */\n" \
     "\n" \
     "using System;\n" \
+    "using System.Collections.Generic;\n" \
     "using Cnp.Sdk.VersionedXML;\n" \
     "\n" \
     "namespace Cnp.Sdk\n" \
