@@ -102,6 +102,8 @@ class XSD:
 
         # Get the next type name and return false if it doesn't exists.
         nextType = self.getType(typeName)
+        if not nextType:
+            nextType = self.getType(typeName + "Enum")
         nextElement = self.getElement(typeName)
         if nextType is None and nextElement is None:
             return False
@@ -122,6 +124,8 @@ class XSD:
 
         # Get the next type name and return itself if it doesn't exists.
         nextType = self.getType(typeName)
+        if not nextType:
+            nextType = self.getType(typeName + "Enum")
         nextElement = self.getElement(typeName)
         if nextType is None and nextElement is None:
             return typeName
@@ -278,6 +282,10 @@ class XSD:
                 schemaObject.addEnumeration(restriction.attrib["value"])
             else:
                 schemaObject.addRestriction(restrictionName,restriction.attrib["value"])
+
+        # Add Enum to the name.
+        if "enum" not in name.lower() and schemaObject.isEnum():
+            schemaObject.name += "Enum"
 
         # Add the object.
         self.addType(schemaObject)

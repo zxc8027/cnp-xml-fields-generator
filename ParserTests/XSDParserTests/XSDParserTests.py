@@ -187,10 +187,7 @@ class XSDParserTests(unittest.TestCase):
                   "<xs:schema targetNamespace=\"http://www.vantivcnp.com/schema\" xmlns:xp=\"http://www.vantivcnp.com/schema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\">" \
                   "     <xs:simpleType name=\"sequenceType\">" \
                   "         <xs:restriction base=\"xs:string\">" \
-                  "             <xs:enumeration value=\"OneTime\"/>" \
-                  "             <xs:enumeration value=\"FirstRecurring\"/>" \
-                  "             <xs:enumeration value=\"SubsequentRecurring\"/>" \
-                  "             <xs:enumeration value=\"FinalRecurring\"/>" \
+                  "             <xs:pattern value=\"[0-9]{6}|0\"/>" \
                   "         </xs:restriction>" \
                   "     </xs:simpleType>" \
                   "     " \
@@ -207,9 +204,9 @@ class XSDParserTests(unittest.TestCase):
         simpleType = xsd.getType("sequenceType")
         self.assertEqual(simpleType.name,"sequenceType")
         self.assertEqual(simpleType.base,"string")
-        self.assertEqual(simpleType.isEnum(),True)
+        self.assertEqual(simpleType.isEnum(),False)
         self.assertEqual(simpleType.restrictions,{"pattern": "[0-9]{6}|0"})
-        self.assertEqual(simpleType.enums,["OneTime","FirstRecurring","SubsequentRecurring","FinalRecurring"])
+        self.assertEqual(simpleType.enums,[])
 
     """
     Tests merging 2 complex types.
@@ -593,8 +590,8 @@ class XSDParserTests(unittest.TestCase):
         simpleType = xsd.getType("testSimpleType4")
         self.assertEqual(simpleType.name,"testSimpleType4")
         self.assertEqual(simpleType.base,"unknown")
-        simpleEnum = xsd.getType("testSimpleType5")
-        self.assertEqual(simpleEnum.name,"testSimpleType5")
+        simpleEnum = xsd.getType("testSimpleType5Enum")
+        self.assertEqual(simpleEnum.name,"testSimpleType5Enum")
         self.assertEqual(simpleEnum.base,"string")
         self.assertEqual(simpleEnum.enums,["value1","value2","value3"])
         simpleEnum = xsd.getType("customElement")
