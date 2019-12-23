@@ -36,6 +36,7 @@ PRIMITIVE_TYPES = [
     "int","short","long",
     "float","double",
     "bool",
+    "DateTime",
 ]
 
 
