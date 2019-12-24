@@ -173,7 +173,6 @@ class VersionedXSD:
         self.enums = {}
         self.simpleTypes = {}
         self.complexTypes = {}
-        self.elements = {}
 
     """
     Returns the complex type that contains a child
@@ -238,20 +237,6 @@ class VersionedXSD:
                 item.addChildNameForVersion(child.name,child.name,transformName(child.type),version,"Attribute",child.default)
 
     """
-    Adds an element.
-    """
-    def addElement(self,element,version):
-        storeName = transformName(element.name)
-
-        # Add the item if it doesn't exist.
-        if storeName not in self.elements.keys():
-            self.elements[storeName] = VersionedComposite(transformName(element.base))
-
-        # Add the name.
-        item = self.elements[storeName]
-        item.addNameForVersion(element.name,version)
-
-    """
     Populates the object from an XSD object.
     """
     def populateFromXSD(self,xsd,version):
@@ -296,7 +281,3 @@ class VersionedXSD:
         # Merge the complex types.
         for complexType in self.complexTypes.values():
             complexType.mergeNameVersions(versions)
-
-        # Merge the elements.
-        for element in self.elements.values():
-            element.mergeNameVersions(versions)

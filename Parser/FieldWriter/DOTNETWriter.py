@@ -133,9 +133,6 @@ class DOTNETWriter(FieldWriter.FieldWriter):
         for typeName in self.xsd.complexTypes.keys():
             if typeName.lower() == name.lower():
                 return typeName
-        for typeName in self.xsd.elements.keys():
-            if typeName.lower() == name.lower():
-                return typeName
 
         # Return the name.
         return name
@@ -252,24 +249,6 @@ class DOTNETWriter(FieldWriter.FieldWriter):
 
 
             generatedFile += "\t}\n\n"
-
-        # Add the classes.
-        generatedFile += "\n\n" + createDeclarationHeader("Element declarations.")
-        for className in self.xsd.elements.keys():
-            if className not in self.xsd.simpleTypes.keys() and className not in self.xsd.complexTypes.keys():
-                type = self.xsd.elements[className]
-
-                # Write the attributes.
-                for name in type.names:
-                    generatedFile += "\t" + self.createAttribute("XMLElement",name) + "\n"
-
-                # Write the class name.
-                base = type.type
-                if base is None:
-                    base = "VersionedXMLElement"
-                generatedFile += "\tpublic partial class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
-
-                generatedFile += "\t}\n\n"
 
         # Return the file.
         return generatedFile + "}"

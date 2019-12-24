@@ -415,51 +415,6 @@ class VersionedXSDTests(unittest.TestCase):
         self.assertEqual(xsd.complexTypes["cnpRequest"].childItems["Test"].names[1].type,"Attribute")
 
     """
-    Tests the addElement method.
-    """
-    def testAddElement(self):
-        # Create two "elements" (complex types).
-        testElement1 = XSDData.XSDComplexType("litleRequest","litleRequest")
-        testElement2 = XSDData.XSDComplexType("cnpRequest","cnpRequest")
-
-        # Create the versioned XSD and add the elements.
-        xsd = XSDVersionDiffer.VersionedXSD()
-        xsd.addElement(testElement1,"1.0")
-        xsd.addElement(testElement2,"1.1")
-        xsd.addElement(testElement2,"1.2")
-        self.assertEqual(len(xsd.elements.keys()),1)
-        self.assertEqual(xsd.elements["cnpRequest"].type,"cnpRequest")
-        self.assertEqual(len(xsd.elements["cnpRequest"].names),3)
-        self.assertEqual(xsd.elements["cnpRequest"].names[0].start,"1.0")
-        self.assertEqual(xsd.elements["cnpRequest"].names[0].end,"1.0")
-        self.assertEqual(xsd.elements["cnpRequest"].names[0].name,"litleRequest")
-        self.assertEqual(xsd.elements["cnpRequest"].names[0].type,None)
-        self.assertEqual(xsd.elements["cnpRequest"].names[1].start,"1.1")
-        self.assertEqual(xsd.elements["cnpRequest"].names[1].end,"1.1")
-        self.assertEqual(xsd.elements["cnpRequest"].names[1].name,"cnpRequest")
-        self.assertEqual(xsd.elements["cnpRequest"].names[1].type,None)
-        self.assertEqual(xsd.elements["cnpRequest"].names[2].start,"1.2")
-        self.assertEqual(xsd.elements["cnpRequest"].names[2].end,"1.2")
-        self.assertEqual(xsd.elements["cnpRequest"].names[2].name,"cnpRequest")
-        self.assertEqual(xsd.elements["cnpRequest"].names[2].type,None)
-
-        # Merge the XSDs together.
-        xsd.mergeNameVersions(["1.0","1.1","1.2"])
-
-        # Assert the merged element is correct.
-        self.assertEqual(len(xsd.elements.keys()),1)
-        self.assertEqual(xsd.elements["cnpRequest"].type,"cnpRequest")
-        self.assertEqual(len(xsd.elements["cnpRequest"].names),2)
-        self.assertEqual(xsd.elements["cnpRequest"].names[0].start,"1.0")
-        self.assertEqual(xsd.elements["cnpRequest"].names[0].end,"1.0")
-        self.assertEqual(xsd.elements["cnpRequest"].names[0].name,"litleRequest")
-        self.assertEqual(xsd.elements["cnpRequest"].names[0].type,None)
-        self.assertEqual(xsd.elements["cnpRequest"].names[1].start,"1.1")
-        self.assertEqual(xsd.elements["cnpRequest"].names[1].end,"1.2")
-        self.assertEqual(xsd.elements["cnpRequest"].names[1].name,"cnpRequest")
-        self.assertEqual(xsd.elements["cnpRequest"].names[1].type,None)
-
-    """
     Tests merging superclass items in complex types.
     """
     def testMergingSuperclasses(self):
