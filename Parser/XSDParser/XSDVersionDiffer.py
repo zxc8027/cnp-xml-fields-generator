@@ -264,7 +264,7 @@ class VersionedXSD:
 
         # Add the elements.
         for element in xsd.elements:
-            self.addElement(element,version)
+            self.addComplexType(element,version)
 
     """
     Merges the names together.
