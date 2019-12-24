@@ -39,6 +39,9 @@ PRIMITIVE_TYPES = [
     "DateTime",
 ]
 
+PRIORITIZED_COMPLEX_TYPE_CHILDREN = [
+    "orderId" # Special case: schema error if orderId is before amount
+]
 
 
 """
@@ -214,22 +217,39 @@ class DOTNETWriter(FieldWriter.FieldWriter):
                 base = "VersionedXMLElement"
             generatedFile += "\tpublic partial class " + self.transformClassName(className) + " : " + base + "\n\t{\n"
 
-            # Write the properties.
-            for childName in type.childItems.keys():
+            """
+            Writes a property.
+            """
+            def writeProperty(childName):
                 child = type.childItems[childName]
-                childType = self.getClassString(child.type,child.maxOccurences)
+                childType = self.getClassString(child.type, child.maxOccurences)
 
                 # Write the property attributes.
+                generatedLine = ""
                 for name in child.names:
-                    generatedFile += "\t\t" + self.createAttribute("XML" + name.type,name) + "\n"
+                    generatedLine += "\t\t" + self.createAttribute("XML" + name.type, name) + "\n"
 
                 # Write the property.
-                generatedFile += "\t\tpublic " + childType + " " + childName + " { get; set; }"
+                generatedLine += "\t\tpublic " + childType + " " + childName + " { get; set; }"
                 if child.default is not None:
-                    generatedFile += " = " + self.getObjectString(child.type,child.default) + ";"
+                    generatedLine += " = " + self.getObjectString(child.type, child.default) + ";"
                 elif child.maxOccurences is not None and child.maxOccurences > 1:
-                    generatedFile += " = new " + childType + "();"
-                generatedFile += "\n\n"
+                    generatedLine += " = new " + childType + "();"
+                generatedLine += "\n\n"
+
+                # Return the property.
+                return generatedLine
+
+            # Write the priorizied children.
+            for childName in PRIORITIZED_COMPLEX_TYPE_CHILDREN:
+                if childName in type.childItems.keys():
+                    generatedFile += writeProperty(childName)
+
+            # Write the properties.
+            for childName in type.childItems.keys():
+                if childName not in PRIORITIZED_COMPLEX_TYPE_CHILDREN:
+                    generatedFile += writeProperty(childName)
+
 
             generatedFile += "\t}\n\n"
 
