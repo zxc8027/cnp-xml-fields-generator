@@ -141,6 +141,22 @@ class XSD:
             return self.getRootBaseType(nextElement.base)
 
     """
+    Returns the next type for a given name.
+    """
+    def getNextType(self,typeName):
+        # Return itself if it is None or is a type already.
+        if typeName is None or self.getType(typeName) is not None:
+            return typeName
+
+        # Return the next element or type.
+        nextType = self.getType(typeName)
+        nextElement = self.getElement(typeName)
+        if nextType is not None:
+            return nextType.base
+        elif nextElement is not None:
+            return self.getNextType(nextElement.base)
+
+    """
     Returns an XSD type for the given name.
     """
     def getType(self,typeName):
@@ -410,9 +426,14 @@ def compressXSD(existingXSD):
     for type in existingXSD.types:
         if isinstance(type,XSDData.XSDComplexType):
             for item in type.childItems:
+                # Replace primitive type extensions and elements.
                 rootBase = str(existingXSD.getRootBaseType(item.type))
                 if rootBase in XSD_PRIMITIVE_TYPES:
                     item.type = rootBase
+                else:
+                    nextComplexType = existingXSD.getNextType(item.type)
+                    if nextComplexType is not None:
+                        item.type = nextComplexType
         else:
             if type.isEnum():
                 rootBase = str(existingXSD.getRootBaseType(type.base))

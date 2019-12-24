@@ -604,3 +604,51 @@ class XSDParserTests(unittest.TestCase):
         self.assertEqual(simpleEnum.childItems[2].type,"integer")
         self.assertEqual(simpleEnum.childItems[3].type,"testSimpleType4")
         self.assertEqual(simpleEnum.childItems[4].type,"testSimpleType5")
+
+    """
+    Tests the compressXSD method with element references.
+    """
+    def testCompressXSDElementReferences(self):
+        xsdText = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" \
+                  "<xs:schema targetNamespace=\"http://www.vantivcnp.com/schema\" xmlns:xp=\"http://www.vantivcnp.com/schema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\">" \
+                  "    <xs:complexType name=\"type1\">" \
+                  "        <xs:all>" \
+                  "            <xs:element name=\"element\" type=\"string\" />" \
+                  "        </xs:all>" \
+                  "    </xs:complexType>" \
+                  "    " \
+                  "    <xs:complexType name=\"type2\">" \
+                  "        <xs:all>" \
+                  "            <xs:element name=\"element\" type=\"string\" />" \
+                  "        </xs:all>" \
+                  "    </xs:complexType>" \
+                  "    " \
+                  "    <xs:element name=\"type3\" type=\"type1\" />" \
+                  "    " \
+                  "    <xs:element name=\"type2\" type=\"type2\" />" \
+                  "    " \
+                  "    <xs:element name=\"type4\" type=\"type3\" />" \
+                  "    " \
+                  "    <xs:element name=\"customElement\">" \
+                  "        <xs:complexType>" \
+                  "            <xs:all>" \
+                  "                <xs:element name=\"element1\" type=\"type1\" />" \
+                  "                <xs:element name=\"element2\" type=\"type2\" />" \
+                  "                <xs:element name=\"element3\" type=\"type3\" />" \
+                  "                <xs:element name=\"element4\" type=\"type4\" />" \
+                  "            </xs:all>" \
+                  "        </xs:complexType>" \
+                  "    </xs:element>" \
+                  "</xs:schema>"
+
+        # Parse the XSD text and assert it was parsed correctly.
+        xsd = XSDParser.processXSD(xsdText)
+        xsd = XSDParser.flattenXSD(xsd)
+        xsd = XSDParser.compressXSD(xsd)
+        self.assertEqual(xsd.namespace, "http://www.vantivcnp.com/schema")
+        simpleEnum = xsd.getType("customElement")
+        self.assertEqual(simpleEnum.name,"customElement")
+        self.assertEqual(simpleEnum.childItems[0].type,"type1")
+        self.assertEqual(simpleEnum.childItems[1].type,"type2")
+        self.assertEqual(simpleEnum.childItems[2].type,"type1")
+        self.assertEqual(simpleEnum.childItems[3].type,"type1")
