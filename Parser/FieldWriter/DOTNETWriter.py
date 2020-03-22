@@ -43,6 +43,29 @@ PRIORITIZED_COMPLEX_TYPE_CHILDREN = [
     "orderId" # Special case: schema error if orderId is before amount
 ]
 
+CHILD_ELEMENT_TYPE_OVERRIDES = {
+    # Workaround for echeckType becoming echeckTypeCtx in 12.11, breaking compatibility with 12.10 and older.
+    "vendorCredit": {
+        "accountInfo": "echeckType",
+    },
+    "vendorDebit": {
+        "accountInfo": "echeckType",
+    },
+    "submerchantCredit": {
+        "accountInfo": "echeckType",
+    },
+    "submerchantDebit": {
+        "accountInfo": "echeckType",
+    },
+    "customerCredit": {
+        "accountInfo": "echeckType",
+    },
+    "customerDebit": {
+        "accountInfo": "echeckType",
+    },
+}
+
+
 
 """
 Creates a declaration header.
@@ -219,7 +242,10 @@ class DOTNETWriter(FieldWriter.FieldWriter):
             """
             def writeProperty(childName):
                 child = type.childItems[childName]
-                childType = self.getClassString(child.type, child.maxOccurences)
+                childType = self.getClassString(child.type,child.maxOccurences)
+                if className in CHILD_ELEMENT_TYPE_OVERRIDES.keys():
+                    if childName in CHILD_ELEMENT_TYPE_OVERRIDES[className].keys():
+                        childType = CHILD_ELEMENT_TYPE_OVERRIDES[className][childName]
 
                 # Write the property attributes.
                 generatedLine = ""

@@ -20,6 +20,10 @@ XSD_SIMPLE_TYPE_ENUM_OVERRIDES = {
     "sequenceType": "sequenceTypeEnum", # sequenceType exists as enum and non-enum form
 }
 
+XSD_INHERITANCE_OVERRIDES = {
+    "echeckTypeCtx": "echeckType", # Workaround for echeckType becoming echeckTypeCtx in 12.11, breaking compatibility with 12.10 and older.
+}
+
 
 
 """
@@ -316,7 +320,9 @@ class XSD:
     def processComplexType(self,element,name,type=None):
         # Override the base type.
         extensionElement = self.getChildElementOfName(element,"extension")
-        if extensionElement is not None:
+        if name in XSD_INHERITANCE_OVERRIDES.keys():
+            type = XSD_INHERITANCE_OVERRIDES[name]
+        elif extensionElement is not None:
             type = removeSchemaInformation(extensionElement.attrib["base"])
         else:
             extensionElement = self.getChildElementOfName(element,"restriction")
